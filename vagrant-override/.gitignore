@@ -1,0 +1,7 @@
+# In this directory it's possible to override default Vagrantfile
+# If you want to override Vagrant, specify your Vagrantfile
+# and run `vagrant up` from this directory.
+# Override file will not be in repository, but it's possible to
+# save here your file with another name and symlink Vagrantfile -> yourFile.
+# Suggested name shall be {yourName}.Vagrantfile
+Vagrantfile
