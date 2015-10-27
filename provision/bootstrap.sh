@@ -20,7 +20,3 @@ curl https://www.dotdeb.org/dotdeb.gpg | apt-key add -
 # uninstall mess and install needed packages
 apt-get update
 apt-get purge -y apache2
-apt-get install -y nginx php7.0-fpm
-
-# setup webserver
-patch /etc/php/7.0/fpm/pool.d/www.conf < /vagrant/etc/php/7.0/fpm/pool.d/www.conf.patch --forward
