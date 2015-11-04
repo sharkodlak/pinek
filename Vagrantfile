@@ -48,9 +48,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	#
 	config.vm.provider "virtualbox" do |vb|
 		# Use VBoxManage to customize the VM. For example to change memory:
-		# User can override these settings in his Vagrantfile in vagrant-override directory
-		vb.customize ["modifyvm", :id, "--cpus", "1"]
-		vb.customize ["modifyvm", :id, "--memory", "1024"]
+		# User can override these settings in his Vagrantfile in ~/.vagrant.d
 	end
 	#
 	# View the documentation for the provider you're using for more
