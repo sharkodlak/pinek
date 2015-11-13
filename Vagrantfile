@@ -26,7 +26,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
 	# Create a private network, which allows host-only access to the machine
 	# using a specific IP.
-	config.vm.network "private_network", ip: "10.10.0.10"
+	#config.vm.network "private_network", ip: "10.10.0.10"
 
 	# Create a public network, which generally matched to bridged network.
 	# Bridged networks make the machine appear as another physical device on
@@ -48,7 +48,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	#
 	config.vm.provider "virtualbox" do |vb|
 		# Use VBoxManage to customize the VM. For example to change memory:
-		# User can override these settings in his Vagrantfile in ~/.vagrant.d
+		# User can define these settings in his Vagrantfile in ~/.vagrant.d
 	end
 	#
 	# View the documentation for the provider you're using for more
@@ -59,7 +59,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	config.vm.provision "shell" do |sh|
 		sh.path = "provision/bootstrap.sh"
 	end
-	["db", "queue", "worker", "search"].each do |provisionName|
+	["db", "queue", "search", "worker"].each do |provisionName|
 		config.vm.define provisionName do |machineConfig|
 			machineConfig.vm.hostname = provisionName
 			machineConfig.vm.provider "virtualbox" do |vb|
