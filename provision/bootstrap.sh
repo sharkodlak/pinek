@@ -12,8 +12,4 @@ dpkg-reconfigure --frontend noninteractive tzdata
 cat /vagrant/etc/locale.gen > /etc/locale.gen
 locale-gen
 
-# add dotdeb repository
-cat /vagrant/etc/apt/sources.list.d/dotdeb.list > /etc/apt/sources.list.d/dotdeb.list
-curl https://www.dotdeb.org/dotdeb.gpg | apt-key add -
-apt-get update
-apt-get install -y git
+#apt-get install -y git
