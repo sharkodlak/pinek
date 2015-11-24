@@ -4,15 +4,15 @@
 usermod -a -G adm vagrant
 
 # shell enhancements
-ln -s /vagrant/home/vagrant/.bash_aliases .bash_aliases
-patch /home/vagrant/.bashrc < /vagrant/home/vagrant/.bashrc.patch --forward
+ln -s /vagrant/provision/home/vagrant/.bash_aliases .bash_aliases
+patch /home/vagrant/.bashrc < /vagrant/provision/home/vagrant/.bashrc.patch --forward
 
 # set timezone
 echo "Europe/Prague" > /etc/timezone
 dpkg-reconfigure --frontend noninteractive tzdata
 
 # prepare locales
-cat /vagrant/etc/locale.gen > /etc/locale.gen
+cat /vagrant/provision/etc/locale.gen > /etc/locale.gen
 locale-gen
 
 #apt-get install -y git
