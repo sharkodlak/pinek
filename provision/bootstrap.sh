@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# allow vagrant to read common logs directly
+usermod -a -G adm vagrant
+
 # shell enhancements
 ln -s /vagrant/home/vagrant/.bash_aliases .bash_aliases
 patch /home/vagrant/.bashrc < /vagrant/home/vagrant/.bashrc.patch --forward

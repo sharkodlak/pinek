@@ -12,25 +12,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	# Every Vagrant virtual environment requires a box to build off of.
 	config.vm.box = "debian/jessie64"
 
-	# Disable automatic box update checking. If you disable this, then
-	# boxes will only be checked for updates when the user runs
-	# `vagrant box outdated`. This is not recommended.
-	# config.vm.box_check_update = false
-
-	# Create a forwarded port mapping which allows access to a specific port
-	# within the machine from a port on the host machine. In the example below,
-	# accessing "localhost:8080" will access port 80 on the guest machine.
-	#config.vm.network "forwarded_port", guest: 22, host: 2020
-
-	# Create a private network, which allows host-only access to the machine
-	# using a specific IP.
-	#config.vm.network "private_network", ip: "10.10.0.10"
-
-	# Create a public network, which generally matched to bridged network.
-	# Bridged networks make the machine appear as another physical device on
-	# your network.
-	# config.vm.network "public_network"
-
 	# If true, then any SSH connections made will enable agent forwarding.
 	# Default value: false
 	# config.ssh.forward_agent = true
@@ -57,28 +38,46 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	config.vm.provision "shell" do |sh|
 		sh.path = "provision/bootstrap.sh"
 	end
-	["db", "queue", "search", "worker"].each do |provisionName|
-		config.vm.define provisionName do |machineConfig|
-			machineConfig.vm.hostname = provisionName
-			machineConfig.vm.provider "virtualbox" do |vb|
-				vb.name = provisionName
+	machineConfigs = {
+		"balancer" => {},
+		"www" => {
+			name: "cathedral",
+			synced_folders: [
+				{host: "www", guest: "/var/www", owner: "www-data"},
+			],
+			forwarded_ports: [
+				{host: 8080, guest: 80},
+				{host: 8443, guest: 443},
+			],
+		},
+		"db" => {
+			numberOfMachines: 2,
+		},
+		"queue" => {},
+		"search" => {},
+		"worker" => {},
+	}
+	primaryMachine = "www"
+	networkIpByte = 10
+	machineConfigs.each do |provisionName, machineConfig|
+		numberOfMachines = machineConfig[:numberOfMachines] || 1
+		for machineNumber in 0..numberOfMachines
+			config.vm.define provisionName, primary: primaryMachine == provisionName do |machine|
+				machine.vm.hostname = machineConfig[:name] || provisionName
+				machine.vm.provider "virtualbox" do |vb|
+					vb.name = machineConfig[:name] || provisionName
+				end
+				machine.vm.provision "shell" do |sh|
+					sh.path = "provision/#{provisionName}.sh"
+				end
+				Array(machineConfig[:synced_folders]).each do |folder|
+					machine.vm.synced_folder folder[:host], folder[:guest], owner: folder[:owner]
+				end
+				Array(machineConfig[:forwarded_ports]).each do |ports|
+					machine.vm.network "forwarded_port", guest: ports[:guest], host: ports[:host]
+				end
+				machine.vm.network "private_network", ip: "10.10.10.#{networkIpByte}"
 			end
-			machineConfig.vm.provision "shell" do |sh|
-				sh.path = "provision/#{provisionName}.sh"
-			end
-		end
-	end
-	config.vm.define "web", primary: true do |machineConfig|
-		provisionName = "web"
-		machineConfig.vm.hostname = "cathedral"
-		machineConfig.vm.provider "virtualbox" do |vb|
-			vb.name = "cathedral"
-		end
-		machineConfig.vm.synced_folder "www", "/var/www", owner: "www-data"
-		machineConfig.vm.provision "shell" do |sh|
-			sh.path = "provision/#{provisionName}.sh"
-		end
-		machineConfig.vm.network "forwarded_port", guest: 80, host: 8080
-		machineConfig.vm.network "forwarded_port", guest: 443, host: 8443
+		end 
 	end
 end

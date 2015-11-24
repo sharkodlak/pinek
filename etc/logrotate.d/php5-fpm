@@ -1,0 +1,13 @@
+/var/log/php5-fpm.log /var/log/www/*.log {
+	rotate 12
+	weekly
+	missingok
+	notifempty
+	compress
+	delaycompress
+	create 0640 www-data adm
+	sharedscripts
+	postrotate
+		/usr/lib/php5/php5-fpm-reopenlogs
+	endscript
+}

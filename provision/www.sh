@@ -17,10 +17,11 @@ apt-get update
 apt-get install -y nginx php5-fpm php5-xdebug php5-phalcon #php7.0-fpm
 
 # setup webserver
-patch /etc/php5/fpm/pool.d/www.conf < /vagrant/etc/php5/fpm/pool.d/www.conf.patch --forward
 #patch /etc/php/7.0/fpm/pool.d/www.conf < /vagrant/etc/php/7.0/fpm/pool.d/www.conf.patch --forward
+patch /etc/php5/fpm/pool.d/www.conf < /vagrant/etc/php5/fpm/pool.d/www.conf.patch --forward
 cat /vagrant/etc/php5/mods-available/xdebug.ini > /etc/php5/mods-available/xdebug.ini
 cat /vagrant/etc/nginx/sites-available/default > /etc/nginx/sites-available/default
+cat /vagrant/etc/logrotate.d/php5-fpm > /etc/logrotate.d/php5-fpm
 mkdir -p /var/log/www
 chown www-data:adm /var/log/www
 chmod 775 /var/log/www
