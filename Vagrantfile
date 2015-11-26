@@ -22,13 +22,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 		sh.path = "provision/bootstrap.sh"
 	end
 	machineConfigs = {
-		"balancer" => {},
-		"db" => {
-			numberOfMachines: 2,
-		},
-		"queue" => {},
-		"search" => {},
-		"worker" => {},
 		"www" => {
 			name: "cathedral",
 			synced_folders: [
@@ -39,6 +32,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 				{host: 8443, guest: 443},
 			],
 		},
+		"db" => {
+			numberOfMachines: 2,
+		},
+		"balancer" => {},
+		"queue" => {},
+		"search" => {},
+		"worker" => {},
 	}
 	primaryMachine = "www"
 	networkIpByte = 10
@@ -48,7 +48,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 			config.vm.define provisionName, primary: primaryMachine == provisionName do |machine|
 				machine.vm.hostname = machineConfig[:name] || provisionName
 				machine.vm.provider "virtualbox" do |vb|
-					vb.name = machineConfig[:name] || provisionName
+					vb.name = provisionName
 				end
 				machine.vm.provision "shell" do |sh|
 					sh.path = "provision/#{provisionName}.sh"
@@ -59,7 +59,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 				Array(machineConfig[:forwarded_ports]).each do |ports|
 					machine.vm.network "forwarded_port", guest: ports[:guest], host: ports[:host]
 				end
-				machine.vm.network "private_network", ip: "10.10.10.#{networkIpByte}", name: "diocese", virtualbox__intnet: "diocese"
+				machine.vm.network "private_network", type: "dhcp", name: "diocese", virtualbox__intnet: "diocese"
 				networkIpByte += 1
 			end
 		end 
