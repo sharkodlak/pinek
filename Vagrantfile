@@ -22,6 +22,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 		sh.path = "provision/bootstrap.sh"
 	end
 	machineConfigs = {
+		"conductor" => {
+			mac: "8427CE000000",
+			saltMaster: true,
+			synced_folders: [
+				{host: "provision/saltstack", guest: "/srv/salt"},
+			],
+		},
 		"www" => {
 			name: "cathedral",
 			synced_folders: [
@@ -33,7 +40,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 			],
 		},
 		"db" => {
-			numberOfMachines: 2,
+			#numberOfMachines: 2,
 		},
 		"balancer" => {},
 		"queue" => {},
@@ -41,7 +48,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 		"worker" => {},
 	}
 	primaryMachine = "www"
-	networkIpByte = 10
 	machineConfigs.each do |provisionName, machineConfig|
 		numberOfMachines = machineConfig[:numberOfMachines] || 1
 		(1..numberOfMachines).each do |machineNumber|
@@ -50,17 +56,26 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 				machine.vm.provider "virtualbox" do |vb|
 					vb.name = provisionName
 				end
+				saltInstallCommand = "sh install_salt.sh" + (machineConfig[:saltMaster] ? " -M" : " -A '172.16.123.10'")
+				machine.vm.provision "shell", inline: saltInstallCommand 
 				machine.vm.provision "shell" do |sh|
 					sh.path = "provision/#{provisionName}.sh"
 				end
 				Array(machineConfig[:synced_folders]).each do |folder|
-					machine.vm.synced_folder folder[:host], folder[:guest], owner: folder[:owner]
+					if folder[:owner]
+						machine.vm.synced_folder folder[:host], folder[:guest], owner: folder[:owner]
+					else
+						machine.vm.synced_folder folder[:host], folder[:guest]
+					end
 				end
 				Array(machineConfig[:forwarded_ports]).each do |ports|
 					machine.vm.network "forwarded_port", guest: ports[:guest], host: ports[:host]
 				end
-				machine.vm.network "private_network", type: "dhcp", name: "diocese", virtualbox__intnet: "diocese"
-				networkIpByte += 1
+				if machineConfig[:ip]
+					machine.vm.network "private_network", name: "diocese", virtualbox__intnet: "diocese", mac: machineConfig[:mac], ip: machineConfig[:ip]
+				else
+					machine.vm.network "private_network", name: "diocese", virtualbox__intnet: "diocese", mac: machineConfig[:mac], type: "dhcp"
+				end
 			end
 		end 
 	end
