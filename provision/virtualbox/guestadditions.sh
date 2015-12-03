@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
-#sudo apt-get install -y parallel
-
 function run {
-	VM="${VM_STATUS_LINE[0]}"
-	VM_STATUS=${VM_STATUS_LINE[1]}
+	read -r VM VM_STATUS PROVIDER <<< $1
 	VBOXVM=$VM
 	echo "$VM: $VM_STATUS";
 	if [[ $VM_STATUS == 'saved' ]] ; then
@@ -23,7 +20,7 @@ function run {
 		if [ -n "$VERSION" ] && $(dpkg --compare-versions $VERSION '>=' $VERSION_TO_INSTALL) ; then
 			echo "skip $VM because current installed version is greater or equal"
 		else
-			vagrant ssh $VM -c 'sudo apt-get install -y linux-headers-$(uname -r) && sudo mount /dev/cdrom /mnt && cd /mnt && sudo ./VBoxLinuxAdditions.run'
+			vagrant ssh $VM -c 'sudo apt-get install -y build-essential linux-headers-$(uname -r) && sudo mount /dev/cdrom /mnt && cd /mnt && sudo ./VBoxLinuxAdditions.run'
 		fi
 		vagrant halt $VM
 		vboxmanage storageattach $VBOXVM --storagectl 'IDE Controller' --port 0 --device 1 --type dvddrive --medium none
@@ -37,10 +34,9 @@ function run {
 	fi
 }
 
+export -f run
 VERSION_TO_INSTALL=$(dpkg -l | grep virtualbox-guest-additions | grep -oP '\d+\.\d+\.\d+')
 VM_STATUSES=$(vagrant status | grep -P '^\w+(?=\s{2,})')
-
-printf "%s\n" "$VM_STATUSES[@]" | while read -r -a VM_STATUS_LINE
-do
-	run
-done
+echo 'Running guest additions install in parallel.'
+printf "%s\n" "$VM_STATUSES[@]"
+printf "%s\n" "$VM_STATUSES[@]" | parallel run
