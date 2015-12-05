@@ -3,6 +3,7 @@
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
+DHCP_FIRST_IP = "172.22.222.10"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	# All Vagrant configuration is done here. The most common configuration
@@ -56,7 +57,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 				machine.vm.provider "virtualbox" do |vb|
 					vb.name = provisionName
 				end
-				saltInstallCommand = "sh install_salt.sh" + (machineConfig[:saltMaster] ? " -M" : " -A '172.16.123.10'")
+				saltInstallCommand = "sh install_salt.sh" + (machineConfig[:saltMaster] ? " -M" : " -A ${DHCP_FIRST_IP}")
 				machine.vm.provision "shell", inline: saltInstallCommand 
 				machine.vm.provision "shell" do |sh|
 					sh.path = "provision/#{provisionName}.sh"
