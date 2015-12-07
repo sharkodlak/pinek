@@ -57,7 +57,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 				machine.vm.provider "virtualbox" do |vb|
 					vb.name = provisionName
 				end
-				saltInstallCommand = "sh install_salt.sh" + (machineConfig[:saltMaster] ? " -M" : " -A ${DHCP_FIRST_IP}")
+				saltInstallCommand = "sh install_salt.sh" + (machineConfig[:saltMaster] ? " -M" : " -A #{DHCP_FIRST_IP}")
 				machine.vm.provision "shell", inline: saltInstallCommand 
 				machine.vm.provision "shell" do |sh|
 					sh.path = "provision/#{provisionName}.sh"
