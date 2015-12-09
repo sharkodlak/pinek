@@ -25,6 +25,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	machineConfigs = {
 		"conductor" => {
 			mac: "8427CE000000",
+			name: "salt", # With another name it doesn't work
 			saltMaster: true,
 			synced_folders: [
 				{host: "provision/saltstack", guest: "/srv/salt"},
@@ -43,10 +44,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 		"db" => {
 			#numberOfMachines: 2,
 		},
-		"balancer" => {},
-		"queue" => {},
-		"search" => {},
-		"worker" => {},
+		#"balancer" => {},
+		#"queue" => {},
+		#"search" => {},
+		#"worker" => {},
 	}
 	primaryMachine = "www"
 	machineConfigs.each do |provisionName, machineConfig|
