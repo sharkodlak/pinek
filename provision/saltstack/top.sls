@@ -2,7 +2,7 @@ base:
   #'*':
   #  - timezone
   #  - locales
-  'cathedral*':
+  'www*':
     - www
   'db*':
     - db

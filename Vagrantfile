@@ -32,7 +32,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 			],
 		},
 		"www" => {
-			name: "cathedral",
 			synced_folders: [
 				{host: "www", guest: "/var/www", owner: "www-data"},
 			],
