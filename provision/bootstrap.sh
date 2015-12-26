@@ -15,5 +15,4 @@ dpkg-reconfigure --frontend noninteractive tzdata
 cat /vagrant/provision/etc/locale.gen > /etc/locale.gen
 locale-gen
 
-#apt-get install -y git
 curl -L https://bootstrap.saltstack.com -o install_salt.sh

@@ -23,15 +23,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 		sh.path = "provision/bootstrap.sh"
 	end
 	machineConfigs = {
-		"conductor" => {
+		"salt" => { # With another name it doesn't work
 			mac: "8427CE000000",
-			name: "salt", # With another name it doesn't work
 			saltMaster: true,
 			synced_folders: [
 				{host: "provision/saltstack", guest: "/srv/salt"},
 			],
-		},
-		"www" => {
+		#},
+		#"www" => {
 			synced_folders: [
 				{host: "www", guest: "/var/www", owner: "www-data"},
 			],
@@ -40,9 +39,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 				{host: 8443, guest: 443},
 			],
 		},
-		"db" => {
+		#"db" => {
 			#numberOfMachines: 2,
-		},
+		#},
 		#"balancer" => {},
 		#"queue" => {},
 		#"search" => {},
