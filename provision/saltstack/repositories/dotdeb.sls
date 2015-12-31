@@ -1,4 +1,4 @@
-dotdeb.repo:
+dotdeb:
   pkgrepo.managed:
     - humanname: Dotdeb
     - name: deb http://packages.dotdeb.org jessie all

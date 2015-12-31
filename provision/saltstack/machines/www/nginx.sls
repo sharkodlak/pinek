@@ -6,6 +6,7 @@ setup nginx:
 /etc/nginx/sites-available/default:
   file.managed:
     - source: salt://filesystem/etc/nginx/sites-available/default
+
 nginx:
   module.run:
     - name: service.reload

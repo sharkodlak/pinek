@@ -28,20 +28,24 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 			saltMaster: true,
 			synced_folders: [
 				{host: "provision/saltstack", guest: "/srv/salt"},
-			],
+				{host: "provision/saltstack/pillar", guest: "/srv/pillar"},
+			#],
 		#},
 		#"www" => {
-			synced_folders: [
+			#synced_folders: [
 				{host: "www", guest: "/var/www", owner: "www-data"},
 			],
 			forwarded_ports: [
 				{host: 8080, guest: 80},
 				{host: 8443, guest: 443},
-			],
-		},
-		#"db" => {
-			#numberOfMachines: 2,
+			#],
 		#},
+		#"db" => {
+			#forwarded_ports: [
+				{host: 5432, guest: 5432},
+			],
+			#numberOfMachines: 2,
+		},
 		#"balancer" => {},
 		#"queue" => {},
 		#"search" => {},
