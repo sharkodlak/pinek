@@ -1,5 +1,5 @@
 setup phalcon:
   pkg.latest:
-    - fromrepo: repositories.phalcon
+    #- fromrepo: repositories.phalcon
     - pkgs:
-      - phalcon
+      - php5-phalcon

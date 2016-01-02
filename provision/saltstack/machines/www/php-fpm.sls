@@ -6,7 +6,6 @@ setup php-fpm:
     - pkgs:
       - php5-fpm # php7.0-fpm
       - php5-xdebug
-      - php5-phalcon
   file.directory:
     - name: /var/log/www
     - user: www-data
