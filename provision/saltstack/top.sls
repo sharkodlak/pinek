@@ -1,6 +1,6 @@
 base:
-  #  - locales
   '*':
     - timezone
+    - locales
     - www
     - db
