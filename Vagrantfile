@@ -60,17 +60,23 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 				machine.vm.provider "virtualbox" do |vb|
 					vb.name = provisionName
 				end
-				saltInstallCommand = "sh install_salt.sh" + (machineConfig[:saltMaster] ? " -M" : " -A #{DHCP_FIRST_IP}")
-				machine.vm.provision "shell", inline: saltInstallCommand 
-				machine.vm.provision "shell" do |sh|
-					sh.path = "provision/#{provisionName}.sh"
-				end
 				Array(machineConfig[:synced_folders]).each do |folder|
 					if folder[:owner]
 						machine.vm.synced_folder folder[:host], folder[:guest], owner: folder[:owner]
 					else
 						machine.vm.synced_folder folder[:host], folder[:guest]
 					end
+				end
+				#saltInstallCommand = "sh install_salt.sh" + (machineConfig[:saltMaster] ? " -M" : " -A #{DHCP_FIRST_IP}")
+				#machine.vm.provision "shell", inline: saltInstallCommand
+				machine.vm.provision :salt do |salt|
+					salt.install_master = machineConfig[:saltMaster] || false
+					salt.install_type = "stable"
+					salt.colorize = true
+					salt.verbose = true
+				end
+				machine.vm.provision "shell" do |sh|
+					sh.path = "provision/#{provisionName}.sh"
 				end
 				Array(machineConfig[:forwarded_ports]).each do |ports|
 					machine.vm.network "forwarded_port", guest: ports[:guest], host: ports[:host]

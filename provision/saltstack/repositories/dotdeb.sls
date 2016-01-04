@@ -6,3 +6,4 @@ dotdeb:
     - keyid: 89DF5277
     - keyserver: keys.gnupg.net
     - refresh_db: true
+    - require_in: php7.0-fpm

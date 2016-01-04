@@ -6,3 +6,4 @@ phalcon:
     - keyid: 31F49B93
     - keyserver: pgpkeys.mit.edu
     - refresh_db: true
+    - require_in: php5-phalcon
