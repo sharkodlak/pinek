@@ -11,3 +11,9 @@ setup jenkins CI:
   pkg.latest:
     - pkgs:
       - jenkins
+  file.managed:
+    - name: /etc/default/jenkins
+    - source: salt://filesystem/etc/default/jenkins
+  service.running:
+    - name: jenkins
+    - enable: True

@@ -43,9 +43,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 		#"db" => {
 			#forwarded_ports: [
 				{host: 5432, guest: 5432},
-			],
+			#],
 			#numberOfMachines: 2,
-		},
+		#},
+		#"jenkins" => {
+			#forwarded_ports: [
+				{host: 8081, guest: 8081},
+			],
+		}
 		#"balancer" => {},
 		#"queue" => {},
 		#"search" => {},
