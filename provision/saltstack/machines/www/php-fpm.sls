@@ -1,7 +1,7 @@
 include:
   - repositories.phalcon
 
-setup php-fpm:
+setup php:
   pkg.latest:
     - pkgs:
       - php5-fpm # php7.0-fpm
