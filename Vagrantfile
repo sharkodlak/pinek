@@ -27,6 +27,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 			mac: "8427CE000000",
 			saltMaster: true,
 			synced_folders: [
+				{host: ".", guest: "/vagrant.root"},
 				{host: "provision/saltstack", guest: "/srv/salt"},
 				{host: "provision/saltstack/pillar", guest: "/srv/pillar"},
 			#],

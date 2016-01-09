@@ -71,7 +71,7 @@ VMS_TO_INSTALL=$@
 echo 'Running guest additions install'
 printf "%s\n" "${VM_STATUSES[@]}"
 echo "Install on ${VMS_TO_INSTALL:-all machines}"
-printf "%s\n" "${VM_STATUSES[@]}" | parallel --jobs 0 run {} "'${VMS_TO_INSTALL[@]}'"
-#printf "%s\n" "${VM_STATUSES[@]}" | while read -r VM_STATUS_LINE; do
-#	run "${VM_STATUS_LINE[@]}" "${VMS_TO_INSTALL[@]}"
-#done
+#printf "%s\n" "${VM_STATUSES[@]}" | parallel --jobs 0 run {} "'${VMS_TO_INSTALL[@]}'"
+printf "%s\n" "${VM_STATUSES[@]}" | while read -r VM_STATUS_LINE; do
+	run "${VM_STATUS_LINE[@]}" "${VMS_TO_INSTALL[@]}"
+done

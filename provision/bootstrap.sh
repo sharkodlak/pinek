@@ -4,7 +4,7 @@
 usermod -a -G adm vagrant
 
 # install dependencies for salt
-apt-get install python-apt
+#apt-get install python-apt
 
 # copy salt keys
 #mkdir -p -m 700 /tmp/salt/pki/minion

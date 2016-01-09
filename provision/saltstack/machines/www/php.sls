@@ -6,6 +6,7 @@ setup php:
     - pkgs:
       - php5-fpm # php7.0-fpm
       - php5-xdebug
+      - php5-xsl
   file.directory:
     - name: /var/log/www
     - user: www-data

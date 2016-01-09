@@ -11,9 +11,10 @@ setup jenkins CI:
   user.present:
     - name: jenkins
     - password: {{pillar['jenkins']['user']['hash']}}
-  file.managed:
+  file.replace:
     - name: /etc/default/jenkins
-    - source: salt://filesystem/etc/default/jenkins
+    - pattern: (?<=HTTP_PORT=)8080
+    - repl: {{pillar['jenkins']['port']}}
 
 prepare directory for SSH key:
   file.directory:
@@ -26,7 +27,7 @@ prepare directory for SSH key:
 create SSH key:
   file.managed:
     - name: /var/lib/jenkins/.ssh/id_rsa
-    - contents_pillar: jenkins:user:id_rsa
+    - contents_pillar: jenkins:key:id_rsa
     - user: jenkins
     - group: jenkins
     - mode: 700
@@ -34,7 +35,7 @@ create SSH key:
 create SSH public key:
   file.managed:
     - name: /var/lib/jenkins/.ssh/id_rsa.pub
-    - contents_pillar: jenkins:user:id_rsa.pub
+    - contents_pillar: jenkins:key:id_rsa.pub
     - user: jenkins
     - group: jenkins
     - mode: 744
