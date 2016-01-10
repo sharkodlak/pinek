@@ -1,15 +1,15 @@
-setup nginx:
+nginx setup:
   pkg.latest:
     - pkgs:
       - nginx
-
-/etc/nginx/sites-available/default:
   file.managed:
+    - name: /etc/nginx/sites-available/default
     - source: salt://filesystem/etc/nginx/sites-available/default
-
-nginx:
   module.run:
     - name: service.reload
     - m_name: nginx
+    - onchanges:
+      - file: nginx setup
   service.running:
+    - name: nginx
     - enable: True
