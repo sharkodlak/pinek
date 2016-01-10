@@ -1,0 +1,2 @@
+include:
+  - machines.db.postgresql

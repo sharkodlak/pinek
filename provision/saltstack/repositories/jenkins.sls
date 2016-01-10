@@ -1,4 +1,4 @@
-Jenkins CI:
+Jenkins CI repo:
   pkgrepo.managed:
     - name: deb http://pkg.jenkins-ci.org/debian binary/
     - humanname: Jenkins CI

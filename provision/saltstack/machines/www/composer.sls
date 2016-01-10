@@ -4,7 +4,7 @@ composer install:
   cmd.run:
     - name: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
     - require:
-      - file: /usr/local/bin/composer
+      - file: composer install
 
 composer install dependencies:
   environ.setenv:

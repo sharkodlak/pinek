@@ -1,4 +1,4 @@
-phalcon:
+Phalcon repo:
   pkgrepo.managed:
     - humanname: Debianiste.org
     - name: deb http://apt.debianiste.org/debian jessie main

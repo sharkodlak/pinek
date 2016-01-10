@@ -1,4 +1,5 @@
 /var/log/php5-fpm.log /var/log/www/*.log {
+	su www-data adm
 	rotate 12
 	weekly
 	missingok

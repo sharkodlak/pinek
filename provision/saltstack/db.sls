@@ -1,2 +1,2 @@
 include:
-  - machines.db.postgresql
+  - machines.db
