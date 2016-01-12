@@ -10,6 +10,10 @@ function isCurrentVersion {
 	[ -n "$VERSION" ] && dpkg --compare-versions $VERSION '>=' $2
 }
 
+function vagrantUpLimited {
+	vagrant --no-shared-folders up --no-provision $VM # Option --no-shared-folders is my custom option and it doesn't throw error only if it's before command
+}
+
 function run {
 	read -r VM VM_STATUS PROVIDER REST <<< $1
 	local INSTALL=
@@ -33,7 +37,7 @@ function run {
 		echo "$VM: $VM_STATUS, $PROVIDER";
 		if [[ $VM_STATUS == 'saved' || $VM_STATUS == 'not created' ]]; then
 			echo "Bring up '$VM' because it is stopped or not created"
-			vagrant up $VM --no-provision
+			vagrantUpLimited
 		fi
 		if isCurrentVersion $VM $VERSION_TO_INSTALL; then
 			echo "Skip '$VM' - current installed version is equal or greater"
@@ -44,7 +48,7 @@ function run {
 			fi
 			echo "Attach ISO to '$VM' and bring machine up"
 			vboxmanage storageattach $VBOXVM --storagectl 'IDE Controller' --port 0 --device 1 --type dvddrive --medium /usr/share/virtualbox/VBoxGuestAdditions.iso
-			vagrant up $VM --no-provision
+			vagrantUpLimited
 			if isCurrentVersion $VM $VERSION_TO_INSTALL; then
 				echo "Skip '$VM' because current installed version is equal or greater"
 			else
@@ -64,7 +68,7 @@ function run {
 	fi
 }
 
-export -f run isCurrentVersion getVersion
+export -f run isCurrentVersion getVersion vagrantUpLimited
 export VERSION_TO_INSTALL=$(dpkg -l | grep virtualbox-guest-additions | grep -oP '\d+\.\d+\.\d+')
 VM_STATUSES=$(vagrant status | grep -P '^\w+(?=\s{2,})')
 VMS_TO_INSTALL=$@

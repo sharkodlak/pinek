@@ -1,6 +1,20 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+require 'optparse' # for temporarily disable shared folders (until guest box additins are instaled)
+require 'yaml' # for writing salt files
+
+options = {}
+optParser = OptionParser.new do |opts|
+	opts.on("--[no-]shared-folders", "Share folders") do |a|
+		options[:sharedFolders] = a
+	end
+end
+begin optParser.parse!
+rescue OptionParser::InvalidOption => e
+end
+
+
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
 DHCP_FIRST_IP = "172.22.222.10"
@@ -68,7 +82,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	machineConfigs = {
 		salt: { # With another name it doesn't work
 			mac: "8427CE000000",
-			color: "\e[01;31m"
+			color: "\\e[01;31m"
 		},
 	}
 	primaryMachine = :www
@@ -88,19 +102,25 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 					new
 				end
 			}
+			if !machineConfigs[machineName][:roles]
+				machineConfigs[machineName][:roles] = []
+			end
+			machineConfigs[machineName][:roles] = machineConfigs[machineName][:roles].push(role.to_s)
 		end
 	end
-	machineConfigs.each do |provisionName, machineConfig|
-		config.vm.define provisionName.to_s, primary: primaryMachine == provisionName do |machine|
-			machine.vm.hostname = machineConfig[:name] || provisionName.to_s
+	machineConfigs.each do |machineName, machineConfig|
+		config.vm.define machineName.to_s, primary: primaryMachine == machineName do |machine|
 			machine.vm.provider "virtualbox" do |vb|
-				vb.name = provisionName.to_s
+				vb.name = machineName.to_s
 			end
-			Array(machineConfig[:synced_folders]).each do |folder|
-				if folder[:owner]
-					machine.vm.synced_folder folder[:host], folder[:guest], owner: folder[:owner]
-				else
-					machine.vm.synced_folder folder[:host], folder[:guest]
+			machine.vm.hostname = machineConfig[:name] || machineName.to_s
+			if options[:sharedFolders]
+				Array(machineConfig[:synced_folders]).each do |folder|
+					if folder[:owner]
+						machine.vm.synced_folder folder[:host], folder[:guest], owner: folder[:owner]
+					else
+						machine.vm.synced_folder folder[:host], folder[:guest]
+					end
 				end
 			end
 			machine.vm.provision :salt do |salt|
@@ -108,6 +128,27 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 				salt.install_type = "stable"
 				salt.colorize = true
 				salt.verbose = true
+				minionConfigFile = "provision/saltstack/minions/#{machineName.to_s}"
+				if File.file?(minionConfigFile)
+					if machineConfig[:saltMaster]
+						salt.master_config = minionConfigFile
+					else
+						salt.minion_config = minionConfigFile
+					end
+				end
+				grainsFile = minionConfigFile + ".grains"
+				grains = {}
+				if File.file?(grainsFile)
+					grains = YAML.load_file(grainsFile)
+				end
+				grains[:roles.to_s] = (grains[:roles.to_s] || []) | machineConfig[:roles]
+				grains[:color.to_s] = machineConfig[:color] || grains[:color.to_s] || ""
+				File.write(grainsFile, grains.to_yaml)
+				salt.grains_config = grainsFile
+				# Prepare grain with roles and color
+				#if machineConfig[:color]
+				#	machine.vm.provision "shell", inline: "echo \"HOST_COLOR='#{machineConfig[:color]}'\" | tee -a /etc/bash.bashrc"
+				#end
 			end
 			Array(machineConfig[:forwarded_ports]).each do |ports|
 				machine.vm.network "forwarded_port", guest: ports[:guest], host: ports[:host]
@@ -116,9 +157,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 				machine.vm.network "private_network", name: "diocese", virtualbox__intnet: "diocese", mac: machineConfig[:mac], ip: machineConfig[:ip]
 			else
 				machine.vm.network "private_network", name: "diocese", virtualbox__intnet: "diocese", mac: machineConfig[:mac], type: "dhcp"
-			end
-			if machineConfig[:color]
-				machine.vm.provision "shell", inline: "echo \"HOST_COLOR='#{machineConfig[:color]}'\" | tee -a /etc/bash.bashrc"
 			end
 		end 
 	end
