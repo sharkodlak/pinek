@@ -1,4 +1,4 @@
-setup locales:
+locales setup:
   file.managed:
     - name: /etc/locale.gen
     - source: salt://filesystem/etc/locale.gen
@@ -6,8 +6,8 @@ setup locales:
     - group: root
     - mode: 644
 
-activate locales:
+locales activate:
   cmd.wait:
     - name: locale-gen
-    - watch:
-      - file: setup locales
+    - onchanges:
+      - file: locales setup

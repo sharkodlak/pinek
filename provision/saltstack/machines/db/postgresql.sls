@@ -35,7 +35,7 @@ PostgreSQL add common users:
     - name: {{pillar['db']['commonUser']['username']}}
     - password: {{pillar['db']['commonUser']['password']}}
     - groups: commonUsers
-    - onchanges:
+    - require:
       - postgres_group: PostgreSQL add common users
 
 PostgreSQL add power users:
@@ -46,13 +46,13 @@ PostgreSQL add power users:
     - encrypted: True
     - replication: True
     - groups: {{pillar['db']['commonUser']['username']}}
-    - onchanges:
-      - postgres_user: PostgreSQL add common user
+    - require:
+      - postgres_user: PostgreSQL add common users
   postgres_user.present:
     - name: {{pillar['db']['powerUser']['username']}}
     - password: {{pillar['db']['powerUser']['password']}}
     - groups: powerUsers
-    - onchanges:
+    - require:
       - postgres_group: PostgreSQL add power users
 
 PostgreSQL allow only password access:
@@ -61,7 +61,8 @@ PostgreSQL allow only password access:
     - source: salt://filesystem/etc/postgresql/9.4/main/pg_hba.conf.patch
     - hash: md5=395786aad5e25b6b430f580c3c0ee773
     - onchanges:
-      - postgres_user: PostgreSQL add power user
+      - file: PostgreSQL allow temporal access without password
+      - postgres_user: PostgreSQL add power users
 
 postgresql:
   module.run:

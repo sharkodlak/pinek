@@ -35,8 +35,8 @@ function run {
 		fi
 		VBOXVM=$VM
 		echo "$VM: $VM_STATUS, $PROVIDER";
-		if [[ $VM_STATUS == 'saved' || $VM_STATUS == 'not created' ]]; then
-			echo "Bring up '$VM' because it is stopped or not created"
+		if [[ $VM_STATUS == 'not created' ]]; then
+			echo "Bring up '$VM' because it's not created"
 			vagrantUpLimited
 		fi
 		if isCurrentVersion $VM $VERSION_TO_INSTALL; then
@@ -53,7 +53,7 @@ function run {
 				echo "Skip '$VM' because current installed version is equal or greater"
 			else
 				echo "Build guest additions on '$VM'"
-				vagrant ssh $VM -c 'sudo apt-get install -y build-essential linux-headers-$(uname -r) && sudo mount /dev/cdrom /mnt && cd /mnt && sudo ./VBoxLinuxAdditions.run' < /dev/null
+				vagrant ssh $VM -c 'sudo apt-get install -y build-essential dkms linux-headers-$(uname -r) && sudo mount /dev/cdrom /mnt && cd /mnt && sudo ./VBoxLinuxAdditions.run' < /dev/null
 			fi
 			echo "Halting machine '$VM' and detach ISO"
 			vagrant halt $VM

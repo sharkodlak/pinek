@@ -4,7 +4,9 @@
 require 'optparse' # for temporarily disable shared folders (until guest box additins are instaled)
 require 'yaml' # for writing salt files
 
-options = {}
+options = {
+	sharedFolders: true,
+}
 optParser = OptionParser.new do |opts|
 	opts.on("--[no-]shared-folders", "Share folders") do |a|
 		options[:sharedFolders] = a
@@ -40,14 +42,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	# Configure roles for machines
 	roles = {
 		balancer: {},
+		ci: {
+			forwarded_ports: [
+				{host: 8081, guest: 8081},
+			],
+		},
 		db: {
 			forwarded_ports: [
 				{host: 5432, guest: 5432},
-			],
-		},
-		jenkins: {
-			forwarded_ports: [
-				{host: 8081, guest: 8081},
 			],
 		},
 		queue: {},
@@ -72,10 +74,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 		},
 	}
 	rolesToMachines = {
+		ci: :salt,
 		db: [
 			:salt,
 		],
-		jenkins: :salt,
 		salt: :salt,
 		www: :salt,
 	}
@@ -143,12 +145,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 				end
 				grains[:roles.to_s] = (grains[:roles.to_s] || []) | machineConfig[:roles]
 				grains[:color.to_s] = machineConfig[:color] || grains[:color.to_s] || ""
-				File.write(grainsFile, grains.to_yaml)
-				salt.grains_config = grainsFile
-				# Prepare grain with roles and color
-				#if machineConfig[:color]
-				#	machine.vm.provision "shell", inline: "echo \"HOST_COLOR='#{machineConfig[:color]}'\" | tee -a /etc/bash.bashrc"
-				#end
+				grainsFileTmp = "/tmp/#{machineName.to_s}.grains"
+				File.write(grainsFileTmp, grains.to_yaml)
+				machine.vm.provision :file, source: grainsFileTmp, destination: "/tmp/salt.grains"
+				machine.vm.provision :shell, inline: "chown root:root /tmp/salt.grains && cp /tmp/salt.grains /etc/salt/grains"
 			end
 			Array(machineConfig[:forwarded_ports]).each do |ports|
 				machine.vm.network "forwarded_port", guest: ports[:guest], host: ports[:host]
