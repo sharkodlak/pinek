@@ -1,4 +1,4 @@
-setup usefull packages:
+usefull packages setup:
   pkg.latest:
     - pkgs:
       - htop

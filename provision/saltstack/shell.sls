@@ -7,7 +7,7 @@
 shell force colors for user {{ user }}:
   file.replace:
     - name: {{ data['home']|default("/home/" + user) }}/.bashrc
-    - pattern: #force_color_prompt=yes
+    - pattern: '#force_color_prompt=yes'
     - repl: force_color_prompt=yes
 
 shell colored prompt for user {{ user }}:

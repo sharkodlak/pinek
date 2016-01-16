@@ -1,4 +1,4 @@
-setup timezone:
+timezone setup:
   file.managed:
     - name: /etc/timezone
     - source: salt://filesystem/etc/timezone
@@ -6,7 +6,7 @@ setup timezone:
     - group: root
     - mode: 644
 
-activate timezone:
+timezone activation:
   cmd.wait:
     - name: dpkg-reconfigure --frontend noninteractive tzdata
     - watch:
