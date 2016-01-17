@@ -74,7 +74,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 		},
 	}
 	rolesToMachines = {
-		ci: :salt,
+		ci: :minion1,
 		db: [
 			:salt,
 		],
@@ -82,12 +82,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 		www: :salt,
 	}
 	machineConfigs = {
-		salt: { # With another name it doesn't work
+		salt: { # With another name it doesn't work, also it has to be first entry to lease first DHCP IP
 			mac: "8427CE000000",
-			color: "\\e[01;31m"
+			color: "\\e[0;31m"
 		},
 	}
-	primaryMachine = :www
 	rolesToMachines.each do |role, machines|
 		if !machines.respond_to?(:each)
 			machines = [machines]
@@ -110,6 +109,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 			machineConfigs[machineName][:roles] = machineConfigs[machineName][:roles].push(role.to_s)
 		end
 	end
+	primaryMachine = :www
+	if ! machineConfigs[primaryMachine]
+		primaryMachine = machineConfigs.keys[0]
+	end
 	machineConfigs.each do |machineName, machineConfig|
 		config.vm.define machineName.to_s, primary: primaryMachine == machineName do |machine|
 			machine.vm.provider "virtualbox" do |vb|
@@ -130,6 +133,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 				salt.install_type = "stable"
 				salt.colorize = true
 				salt.verbose = true
+				if ! machineConfig[:saltMaster]
+					salt.bootstrap_options = "-A '#{DHCP_FIRST_IP}'"
+				end
 				minionConfigFile = "provision/saltstack/minions/#{machineName.to_s}"
 				if File.file?(minionConfigFile)
 					if machineConfig[:saltMaster]

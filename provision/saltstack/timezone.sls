@@ -10,4 +10,4 @@ timezone activation:
   cmd.wait:
     - name: dpkg-reconfigure --frontend noninteractive tzdata
     - watch:
-      - file: setup timezone
+      - file: timezone setup
