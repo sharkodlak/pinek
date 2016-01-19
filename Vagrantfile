@@ -128,14 +128,37 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 					end
 				end
 			end
+			machine.vm.provision :shell, inline: "mkdir -m 664 -p /tmp/salt && chown root:root /tmp/salt && mkdir -m 700 -p /etc/salt/pki/minions"
 			machine.vm.provision :salt do |salt|
 				salt.install_master = machineConfig[:saltMaster] || false
 				salt.install_type = "stable"
 				salt.colorize = true
 				salt.verbose = true
-				if ! machineConfig[:saltMaster]
-					salt.bootstrap_options = "-A '#{DHCP_FIRST_IP}'"
+				saltBootstrapOptions = {c: "-c /tmp/salt"}
+				if machineConfig[:saltMaster]
+					salt.master_key = "provision/saltstack/filesystem/etc/salt/pki/minion/#{machineName.to_s}.pem"
+					salt.master_pub = "provision/saltstack/filesystem/etc/salt/pki/minion/#{machineName.to_s}.pub"
+					salt.seed_master = {
+						master: "provision/saltstack/filesystem/etc/salt/pki/minion/#{machineName.to_s}.pub",
+						minion1: "provision/saltstack/filesystem/etc/salt/pki/minion/minion1.pub",
+					}
+					#machine.vm.provision :file, source: "provision/saltstack/filesystem/etc/salt/pki/minion/#{machineName.to_s}.pem", destination: "/tmp/master.pem"
+					#machine.vm.provision :shell, inline: "chmod 400 /tmp/master.pem && chown root:root /tmp/master.pem && cp /tmp/master.pem /etc/salt/pki/master/master.pem"
+					#machine.vm.provision :file, source: "provision/saltstack/filesystem/etc/salt/pki/minion/#{machineName.to_s}.pub", destination: "/tmp/master.pub"
+					#machine.vm.provision :shell, inline: "chmod 664 /tmp/master.pub && chown root:root /tmp/master.pub && cp /tmp/master.pub /etc/salt/pki/master/master.pub"
+					#machine.vm.provision :file, source: "provision/saltstack/filesystem/etc/salt/pki/minion/*.pub", destination: "/tmp/"
+					#machine.vm.provision :shell, inline: "chmod 664 /tmp/*.pub && chown root:root /tmp/*.pub && mkdir -m 700 -p /etc/salt/pki/minions && cp /tmp/*.pub /etc/salt/pki/minions/"
+				else
+					saltBootstrapOptions[:A] = "-A '#{DHCP_FIRST_IP}'"
+					salt.minion_key = "provision/saltstack/filesystem/etc/salt/pki/minion/#{machineName.to_s}.pem"
+					salt.minion_pub = "provision/saltstack/filesystem/etc/salt/pki/minion/#{machineName.to_s}.pub"
+					#machine.vm.provision :file, source: "provision/saltstack/filesystem/etc/salt/pki/minion/#{machineName.to_s}.pem", destination: "/tmp/minion.pem"
+					#machine.vm.provision :shell, inline: "chmod 400 /tmp/minion.pem && chown root:root /tmp/minion.pem && cp /tmp/minion.pem /etc/salt/pki/minion/#{machineName.to_s}.pem"
+					#machine.vm.provision :file, source: "provision/saltstack/filesystem/etc/salt/pki/minion/#{machineName.to_s}.pub", destination: "/tmp/minion.pub"
+					#machine.vm.provision :shell, inline: "chmod 664 /tmp/minion.pub && chown root:root /tmp/minion.pub && cp /tmp/minion.pub /etc/salt/pki/minion/#{machineName.to_s}.pub"
 				end
+				salt.bootstrap_options = saltBootstrapOptions.map{|k,v| "#{v}"}.join(' ')
+				salt.run_highstate = true
 				minionConfigFile = "provision/saltstack/minions/#{machineName.to_s}"
 				if File.file?(minionConfigFile)
 					if machineConfig[:saltMaster]
