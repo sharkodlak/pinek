@@ -65,7 +65,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 		worker: {},
 		www: {
 			synced_folders: [
-				{host: "www", guest: "/var/www", owner: "www-data"},
+				{host: "src", guest: "/var/www", owner: "www-data"},
 			],
 			forwarded_ports: [
 				{host: 8080, guest: 80},

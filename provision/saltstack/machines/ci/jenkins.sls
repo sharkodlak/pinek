@@ -51,12 +51,19 @@ Jenkins CI SSH public key:
     - onchanges:
       - file: Jenkins CI SSH keys directory
 
+Jenkins CI reenable MD5 HTTP TLS cypher in Java: # until Jenkins will use stronger cypher on their's plugin site
+  file.replace:
+    - name: /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/java.security
+    - pattern: (?<=jdk\.certpath\.disabledAlgorithms=MD2), MD5(?=, RSA keySize < 1024)
+    - repl: 
+
 jenkins:
   module.run:
     - name: service.restart
     - m_name: jenkins
     - onchanges:
       - file: Jenkins CI setup
+      - file: Jenkins CI reenable MD5 HTTP TLS cypher in Java
   service.running:
     - name: jenkins
     - enable: True

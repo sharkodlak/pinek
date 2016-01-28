@@ -1,6 +1,6 @@
 Jenkins wait for server ready:
   cmd.run:
-    - name: COUNTER=0 && until `curl --silent --connect-timeout 1 -I http://127.0.0.1:{{ pillar['jenkins']['port'] }} | grep --quiet '200 OK'` || [ $COUNTER -ge 60 ]; do COUNTER=$(($COUNTER+1)); sleep 1; done
+    - name: COUNTER=0 && until `curl --silent --connect-timeout 1 -I http://127.0.0.1:{{ pillar['jenkins']['port'] }} | grep --quiet '200 OK'` || [ $COUNTER -ge 600 ]; do COUNTER=$(($COUNTER+1)); sleep 1; done
 
 Jenkins CI CLI setup:
   cmd.run:
@@ -14,12 +14,6 @@ Jenkins CI CLI setup:
     - group: jenkins
     - dir_mode: 755
     - file_mode: 644
-
-#Jenkins CI CLI login:
-#  cmd.run:
-#    - name: java -jar jenkins-cli.jar -s http://127.0.0.1:{{ pillar['jenkins']['port'] }}/ login --username {{ pillar['jenkins']['user']['username'] }} --password '{{ pillar['jenkins']['user']['password'] }}'
-#    - require:
-#      - cmd: Jenkins CI CLI setup
 
 Jenkins CI install plugins:
   cmd.run:
