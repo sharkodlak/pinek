@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="name-of-project" default="full-build">
-	<property name="basedir" value="../"/>
+	<property name="basedir" value="./"/>
 
 	<property name="pdepend" value="${basedir}/vendor/bin/pdepend"/>
 	<property name="phpcpd" value="${basedir}/vendor/bin/phpcpd"/>

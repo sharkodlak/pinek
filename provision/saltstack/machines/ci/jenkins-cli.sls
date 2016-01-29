@@ -1,3 +1,6 @@
+include:
+  - git
+
 Jenkins wait for server ready:
   cmd.run:
     - name: COUNTER=0 && until `curl --silent --connect-timeout 1 -I http://127.0.0.1:{{ pillar['jenkins']['port'] }} | grep --quiet '200 OK'` || [ $COUNTER -ge 600 ]; do COUNTER=$(($COUNTER+1)); sleep 1; done

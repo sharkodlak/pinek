@@ -24,12 +24,14 @@ Jenkins CI setup:
     - password: {{pillar['jenkins']['user']['hash']}}
 
 Jenkins CI SSH keys directory:
-  file.directory:
+  file.recurse:
     - name: /var/lib/jenkins/.ssh
+    - source: salt://filesystem/var/lib/jenkins/.ssh
     - user: jenkins
     - group: jenkins
-    - mode: 700
-    - makedirs: True
+    - dir_mode: 700
+    - file_mode: 744
+    - include_empty: True
 
 Jenkins CI SSH key:
   file.managed:
@@ -54,8 +56,8 @@ Jenkins CI SSH public key:
 Jenkins CI reenable MD5 HTTP TLS cypher in Java: # until Jenkins will use stronger cypher on their's plugin site
   file.replace:
     - name: /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/java.security
-    - pattern: (?<=jdk\.certpath\.disabledAlgorithms=MD2), MD5(?=, RSA keySize < 1024)
-    - repl: 
+    - pattern: (?<=jdk\.certpath\.disabledAlgorithms=)MD2, MD5, RSA keySize < 1024
+    - repl: MD2, RSA keySize < 1024
 
 jenkins:
   module.run:
