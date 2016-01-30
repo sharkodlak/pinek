@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="name-of-project" default="full-build">
 	<property name="basedir" value="./"/>
+	<property name="composer" value="composer"/>
 
 	<property name="pdepend" value="${basedir}/vendor/bin/pdepend"/>
 	<property name="phpcpd" value="${basedir}/vendor/bin/phpcpd"/>
@@ -190,9 +191,8 @@
 	</target>
 
 	<target name="composer" description="Installing composer dependencies">
-		<exec executable="composer" failonerror="true">
+		<exec executable="${composer}" failonerror="true">
 			<arg value="install" />
-			<arg value="--dev" />
 			<arg value="--prefer-dist" />
 			<arg value="--no-progress" />
 			<arg value="--optimize-autoloader" />

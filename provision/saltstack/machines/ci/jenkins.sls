@@ -5,7 +5,7 @@ Jenkins CI Java setup:
   pkg.latest:
     - pkgs:
       - default-jre-headless
-      - openjdk-7-jre-headless
+      - openjdk-7-jdk
     - require:
       - pkgrepo: Jenkins CI repo
 
