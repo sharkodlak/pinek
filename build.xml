@@ -44,6 +44,7 @@
 
 	<target name="prepare" unless="prepare.done" depends="clean,composer" description="Prepare for build">
 		<mkdir dir="${basedir}/build/api"/>
+		<mkdir dir="${basedir}/build/api/xml"/>
 		<mkdir dir="${basedir}/build/coverage"/>
 		<mkdir dir="${basedir}/build/logs"/>
 		<mkdir dir="${basedir}/build/pdepend"/>
@@ -58,10 +59,6 @@
 				<include name="**/*.php" />
 				<modified />
 			</fileset>
-			<fileset dir="${basedir}/src/tests">
-				<include name="**/*.php" />
-				<modified />
-			</fileset>
 		</apply>
 		<property name="lint.done" value="true"/>
 	</target>
@@ -70,7 +67,6 @@
 		<exec executable="${phploc}" taskname="phploc">
 			<arg value="--count-tests" />
 			<arg path="${basedir}/src" />
-			<arg path="${basedir}/src/tests" />
 		</exec>
 		<property name="phploc.done" value="true"/>
 	</target>
@@ -83,7 +79,6 @@
 			<arg value="--log-xml" />
 			<arg path="${basedir}/build/logs/phploc.xml" />
 			<arg path="${basedir}/src" />
-			<arg path="${basedir}/src/tests" />
 		</exec>
 		<property name="phploc.done" value="true"/>
 	</target>
@@ -124,7 +119,6 @@
 			<arg value="--extensions=php" />
 			<arg value="--ignore=autoload.php" />
 			<arg path="${basedir}/src" />
-			<arg path="${basedir}/src/tests" />
 		</exec>
 		<property name="phpcs.done" value="true"/>
 	</target>
@@ -137,7 +131,6 @@
 			<arg value="--extensions=php" />
 			<arg value="--ignore=autoload.php" />
 			<arg path="${basedir}/src" />
-			<arg path="${basedir}/src/tests" />
 		</exec>
 		<property name="phpcs.done" value="true"/>
 	</target>
@@ -175,7 +168,7 @@
 		<property name="phpunit.done" value="true"/>
 	</target>
 
-	<target name="phpdox" unless="phpdox.done" depends="phploc-ci,phpcs-ci,phpmd-ci" description="Generate project documentation using phpDox">
+	<target name="phpdox" unless="phpdox.done" depends="prepare,phploc-ci,phpcs-ci,phpmd-ci" description="Generate project documentation using phpDox">
 		<exec executable="${phpdox}" dir="${basedir}/build" taskname="phpdox"/>
 		<property name="phpdox.done" value="true"/>
 	</target>

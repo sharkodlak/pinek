@@ -34,6 +34,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	# config.ssh.forward_agent = true
 
 
+	# Folder vagrant isn't synced
+	config.vm.synced_folder ".", "/vagrant.root"
+
 	# Provision Vagrant by shell scripts
 	config.vm.provision "shell" do |sh|
 		sh.path = "provision/bootstrap.sh"
@@ -56,7 +59,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 		salt: {
 			saltMaster: true,
 			synced_folders: [
-				{host: ".", guest: "/vagrant.root"},
 				{host: "provision/saltstack", guest: "/srv/salt"},
 				{host: "provision/saltstack/pillar", guest: "/srv/pillar"},
 			],

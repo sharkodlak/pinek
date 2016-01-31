@@ -11,31 +11,23 @@
         processIsolation            = "false"
         stopOnFailure               = "false"
         syntaxCheck                 = "false"
-        bootstrap                   = "../app/bootstrap.php.cache" >
+        bootstrap                   = "../src/www/index.php" >
 
     <testsuites>
-        <testsuite name="Jumph">
-            <directory>../src/*/*Bundle/Tests</directory>
-            <directory>../src/*/Bundle/*Bundle/Tests</directory>
+        <testsuite name="pinek">
+            <directory>../src/tests</directory>
         </testsuite>
     </testsuites>
 
     <php>
-        <server name="KERNEL_DIR" value="app/" />
+        <server name="KERNEL_DIR" value="src/app/" />
         <ini name="memory_limit" value="2048M" />
-        <ini name="xdebug.max_nesting_level" value="500" />
+        <ini name="xdebug.max_nesting_level" value="100" />
     </php>
 
     <filter>
         <whitelist addUncoveredFilesFromWhitelist="true">
-            <directory suffix=".php">../src</directory>
-            <exclude>
-                <directory>../src/*/*Bundle/Resources</directory>
-                <directory>../src/*/*Bundle/Tests</directory>
-                <directory>../src/*/Bundle/*Bundle/Resources</directory>
-                <directory>../src/*/Bundle/*Bundle/Tests</directory>
-                <directory>../src/*/Bundle/*Bundle/DataFixtures</directory>
-            </exclude>
+            <directory suffix=".php">../src/app</directory>
         </whitelist>
     </filter>
 
