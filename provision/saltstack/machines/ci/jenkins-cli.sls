@@ -20,7 +20,7 @@ Jenkins CI CLI setup:
 
 Jenkins CI install plugins:
   cmd.run:
-    - name: java -jar jenkins-cli.jar -s http://localhost:{{ pillar['jenkins']['port'] }} install-plugin checkstyle cloverphp crap4j dry github htmlpublisher jdepend plot pmd violations warnings xunit
+    - name: java -jar jenkins-cli.jar -s http://localhost:{{ pillar['jenkins']['port'] }} install-plugin checkstyle cloverphp crap4j dry filesystem_scm github htmlpublisher jdepend plot pmd violations warnings xunit
     - require:
       - cmd: Jenkins CI CLI setup
       - pkg: Git setup

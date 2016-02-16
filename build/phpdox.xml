@@ -3,10 +3,11 @@
     <project name="pinek" source="../src" workdir="phpdox">
         <collector publiconly="false">
             <include mask="*.php" />
+            <inheritance resolve="true"/>
         </collector>
 
         <generator output=".">
-            <enrich base="../logs">
+            <enrich base="logs">
                 <source type="build" />
                 <source type="git">
                     <history enabled="true" limit="15" />

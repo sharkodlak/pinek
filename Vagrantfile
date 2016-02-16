@@ -49,6 +49,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 			forwarded_ports: [
 				{host: 8081, guest: 8081},
 			],
+			synced_folders: [
+				{host: "..", guest: "/libs"},
+			],
 		},
 		db: {
 			forwarded_ports: [
@@ -159,6 +162,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 			else
 				machine.vm.network "private_network", name: "diocese", virtualbox__intnet: "diocese", mac: machineConfig[:mac], type: "dhcp"
 			end
-		end 
+		end
 	end
 end
