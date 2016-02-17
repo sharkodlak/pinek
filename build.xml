@@ -3,7 +3,6 @@
 	<property name="basedir" value="./"/>
 	<property name="srcdir" value="${basedir}/src"/>
 	<property name="testdir" value="${basedir}/tests"/>
-	<property name="threadCount" value="3"/>
 
 	<property name="composer" value="composer"/>
 	<property name="pdepend" value="${basedir}/vendor/bin/pdepend"/>
@@ -18,31 +17,13 @@
 	<target name="quick-build" depends="prepare,phpunit-no-coverage" description="Performs a lint check and runs the tests (without generating code coverage reports)"/>
 
 
-	<target name="prepare" unless="prepare.done" description="Prepare for build">
-		<parallel threadCount="${threadCount}">
-			<antcall target="composer"/>
-			<antcall target="mkdir"/>
-			<antcall target="lint"/>
-		</parallel>
-		<property name="prepare.done" value="true"/>
-	</target>
-
-	<target name="composer" unless="composer.done" description="Installing composer requirements">
-		<exec executable="${composer}" failonerror="true" taskname="composer">
-			<arg value="install"/>
-			<arg value="--prefer-dist"/>
-			<arg value="--no-progress"/>
-		</exec>
-		<property name="composer.done" value="true"/>
-	</target>
-
-	<target name="mkdir" unless="mkdir.done" depends="clean" description="Prepare for build">
+	<target name="prepare" depends="clean" unless="prepare.done" description="Prepare for build">
 		<mkdir dir="${basedir}/build/docs"/>
 		<mkdir dir="${basedir}/build/coverage"/>
 		<mkdir dir="${basedir}/build/logs"/>
 		<mkdir dir="${basedir}/build/pdepend"/>
 		<mkdir dir="${basedir}/build/phpdox"/>
-		<property name="mkdir.done" value="true"/>
+		<property name="prepare.done" value="true"/>
 	</target>
 
 	<target name="clean" unless="clean.done" description="Cleanup build artifacts">
@@ -54,16 +35,16 @@
 		<property name="clean.done" value="true"/>
 	</target>
 
-	<target name="static-analysis" depends="composer" description="Performs static analysis (executing the tools in parallel)">
-		<parallel threadCount="${threadCount}">
-			<antcall target="phploc"/>
-			<sequential>
-				<antcall target="pdepend"/>
-				<antcall target="phpmd"/>
-			</sequential>
-			<antcall target="phpcs"/>
-			<antcall target="phpcpd"/>
-		</parallel>
+	<target name="composer" unless="composer.done" description="Installing composer requirements">
+		<exec executable="${composer}" failonerror="true" taskname="composer">
+			<arg value="install"/>
+			<arg value="--prefer-dist"/>
+			<arg value="--no-progress"/>
+		</exec>
+		<property name="composer.done" value="true"/>
+	</target>
+
+	<target name="static-analysis" depends="lint,phploc,pdepend,phpmd,phpcs,phpcpd" description="Performs static analysis">
 	</target>
 
 	<target name="lint" unless="lint.done" description="Perform syntax check of sourcecode files">
@@ -81,7 +62,7 @@
 		<property name="lint.done" value="true"/>
 	</target>
 
-	<target name="phploc-cli" unless="phploc.done" description="Measure project size using PHPLOC and print human readable output. Intended for usage on the command line.">
+	<target name="phploc-cli" depends="prepare,composer" unless="phploc.done" description="Measure project size using PHPLOC and print human readable output. Intended for usage on the command line.">
 		<exec executable="${phploc}" taskname="phploc">
 			<arg value="--count-tests" />
 			<arg path="${srcdir}" />
@@ -90,7 +71,7 @@
 		<property name="phploc.done" value="true"/>
 	</target>
 
-	<target name="phploc" unless="phploc.done" depends="prepare" description="Measure project size using PHPLOC and log result in CSV and XML format. Intended for usage within a continuous integration environment.">
+	<target name="phploc" unless="phploc.done" depends="prepare,composer" description="Measure project size using PHPLOC and log result in CSV and XML format. Intended for usage within a continuous integration environment.">
 		<exec executable="${phploc}" taskname="phploc">
 			<arg value="--count-tests" />
 			<arg value="--log-csv" />
@@ -103,7 +84,7 @@
 		<property name="phploc.done" value="true"/>
 	</target>
 
-	<target name="pdepend" unless="pdepend.done" depends="prepare" description="Calculate software metrics using PHP_Depend and log result in XML format. Intended for usage within a continuous integration environment.">
+	<target name="pdepend" unless="pdepend.done" depends="prepare,composer" description="Calculate software metrics using PHP_Depend and log result in XML format. Intended for usage within a continuous integration environment.">
 		<exec executable="${pdepend}" taskname="pdepend">
 			<arg value="--jdepend-xml=${basedir}/build/logs/jdepend.xml" />
 			<arg value="--jdepend-chart=${basedir}/build/pdepend/dependencies.svg" />
@@ -113,7 +94,7 @@
 		<property name="pdepend.done" value="true"/>
 	</target>
 
-	<target name="phpcs-cli" unless="phpcs.done" description="Find coding standard violations using PHP_CodeSniffer and print human readable output. Intended for usage on the command line before committing.">
+	<target name="phpcs-cli" unless="phpcs.done" depends="prepare,composer" description="Find coding standard violations using PHP_CodeSniffer and print human readable output. Intended for usage on the command line before committing.">
 		<exec executable="${phpcs}" taskname="phpcs">
 			<arg value="--standard=vendor/sharkodlak/coding-style/PHP_CodeSniffer/Sharkodlak" />
 			<arg value="--extensions=php" />
@@ -124,7 +105,7 @@
 		<property name="phpcs.done" value="true"/>
 	</target>
 
-	<target name="phpcs" unless="phpcs.done" depends="prepare" description="Find coding standard violations using PHP_CodeSniffer and log result in XML format. Intended for usage within a continuous integration environment.">
+	<target name="phpcs" unless="phpcs.done" depends="prepare,composer" description="Find coding standard violations using PHP_CodeSniffer and log result in XML format. Intended for usage within a continuous integration environment.">
 		<exec executable="${phpcs}" output="/dev/null" taskname="phpcs">
 			<arg value="--standard=vendor/sharkodlak/coding-style/PHP_CodeSniffer/Sharkodlak" />
 			<arg value="--extensions=php" />
@@ -137,7 +118,7 @@
 		<property name="phpcs.done" value="true"/>
 	</target>
 
-	<target name="phpmd-cli" unless="phpmd.done" description="Perform project mess detection using PHPMD and print human readable output. Intended for usage on the command line before committing.">
+	<target name="phpmd-cli" unless="phpmd.done" depends="prepare,composer" description="Perform project mess detection using PHPMD and print human readable output. Intended for usage on the command line before committing.">
 		<exec executable="${phpmd}" taskname="phpmd">
 			<arg path="${srcdir},${testdir}" />
 			<arg value="text" />
@@ -146,7 +127,7 @@
 		<property name="phpmd.done" value="true"/>
 	</target>
 
-	<target name="phpmd" unless="phpmd.done" depends="prepare" description="Perform project mess detection using PHPMD and log result in XML format. Intended for usage within a continuous integration environment.">
+	<target name="phpmd" unless="phpmd.done" depends="prepare,composer" description="Perform project mess detection using PHPMD and log result in XML format. Intended for usage within a continuous integration environment.">
 		<exec executable="${phpmd}" taskname="phpmd">
 			<arg path="${srcdir},${testdir}" />
 			<arg value="xml" />
@@ -157,14 +138,14 @@
 		<property name="phpmd.done" value="true"/>
 	</target>
 
-	<target name="phpcpd-cli" unless="phpcpd.done" description="Find duplicate code using PHPCPD and print human readable output. Intended for usage on the command line before committing.">
+	<target name="phpcpd-cli" unless="phpcpd.done" depends="prepare,composer" description="Find duplicate code using PHPCPD and print human readable output. Intended for usage on the command line before committing.">
 		<exec executable="${phpcpd}" taskname="phpcpd">
 			<arg path="${srcdir}" />
 		</exec>
 		<property name="phpcpd.done" value="true"/>
 	</target>
 
-	<target name="phpcpd" unless="phpcpd.done" depends="prepare" description="Find duplicate code using PHPCPD and log result in XML format. Intended for usage within a continuous integration environment.">
+	<target name="phpcpd" unless="phpcpd.done" depends="prepare,composer" description="Find duplicate code using PHPCPD and log result in XML format. Intended for usage within a continuous integration environment.">
 		<exec executable="${phpcpd}" taskname="phpcpd">
 			<arg value="--log-pmd" />
 			<arg path="${basedir}/build/logs/pmd-cpd.xml" />
