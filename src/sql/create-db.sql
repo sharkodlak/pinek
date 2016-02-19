@@ -1,3 +1,2 @@
 SET ROLE "powerUsers";
-DROP DATABASE pinek;
 CREATE DATABASE pinek WITH OWNER reader;
