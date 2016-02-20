@@ -78,6 +78,15 @@ CREATE TABLE measure (
 	UNIQUE (name)
 );
 
+INSERT INTO measure (id, name) VALUES
+	(-1, 'length'),
+	(-2, 'mass'),
+	(-3, 'time'),
+	(-4, 'electric current'),
+	(-5, 'thermodynamic temperature'),
+	(-6, 'amount of substance'),
+	(-7, 'luminous intensity');
+
 CREATE TABLE unit (
 	id SERIAL,
 	name VARCHAR(64) NOT NULL,
@@ -91,14 +100,76 @@ CREATE TABLE unit (
 	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
+INSERT INTO unit (id, name, symbol, measure_id) VALUES
+	(-1, 'metre', 'm', -1),
+	(-2, 'gram', 'g', -2),
+	(-3, 'second', 's', -3),
+	(-4, 'ampere', 'A', -4),
+	(-5, 'kelvin', 'K', -5),
+	(-6, 'mole', 'mol', -6),
+	(-7, 'candela', 'cd', -7);
+
+CREATE TABLE unit_prefix (
+	symbol VARCHAR(2) NOT NULL,
+	name VARCHAR(5) NOT NULL,
+	base INTEGER NOT NULL DEFAULT 10,
+	exponent SMALLINT NOT NULL,
+	PRIMARY KEY (symbol),
+	UNIQUE (name),
+	UNIQUE (exponent)
+);
+
+INSERT INTO unit_prefix (symbol, name, exponent) VALUES
+	('Y', 'yotta', 24),
+	('Z', 'zetta', 21),
+	('E', 'exa', 18),
+	('P', 'peta', 15),
+	('T', 'tera', 12),
+	('G', 'giga', 9),
+	('M', 'mega', 6),
+	('k', 'kilo', 3),
+	('h', 'hecto', 2),
+	('da', 'deca', 1),
+	('d', 'deci', -1),
+	('c', 'centi', -2),
+	('m', 'milli', -3),
+	('μ', 'micro', -6),
+	('n', 'nano', -9),
+	('p', 'pico', -12),
+	('f', 'femto', -15),
+	('a', 'atto', -18),
+	('z', 'zepto', -21),
+	('y', 'yocto', -24);
+INSERT INTO unit_prefix (symbol, name, base, exponent) VALUES
+	('Ki', 'kibi', 2, 10),
+	('Mi', 'mebi', 2, 20),
+	('Gi', 'gibi', 2, 30),
+	('Ti', 'tebi', 2, 40),
+	('Pi', 'pebi', 2, 50),
+	('Ei', 'exbi', 2, 60),
+	('Zi', 'zebi', 2, 70),
+	('Yi', 'yobi', 2, 80);
+
 CREATE TABLE measure_main_unit (
 	measure_id INTEGER NOT NULL,
+	unit_prefix VARCHAR(2),
 	unit_id INTEGER,
 	PRIMARY KEY (measure_id),
 	UNIQUE (unit_id),
 	FOREIGN KEY (measure_id) REFERENCES measure (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (unit_prefix) REFERENCES unit_prefix (symbol) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
+
+INSERT INTO measure_main_unit (measure_id, unit_id) VALUES
+	(-1, -1),
+	(-3, -3),
+	(-4, -4),
+	(-5, -5),
+	(-6, -6),
+	(-7, -7);
+INSERT INTO measure_main_unit (measure_id, unit_prefix, unit_id) VALUES
+	(-2, 'k', -2);
 
 CREATE TABLE product (
 	id SERIAL,
@@ -112,9 +183,9 @@ CREATE TABLE product (
 	short_description VARCHAR(1024),
 	description TEXT,
 	price PRICE NOT NULL,
-	quantity INTEGER,
+	quantity DECIMAL,
 	unit_id INTEGER, -- Specify unit if product isn't sold per pieces
-	minimum_amount INTEGER NOT NULL DEFAULT 1,
+	minimum_amount DECIMAL NOT NULL DEFAULT 1,
 	availability_id INTEGER NOT NULL,
 	active BOOLEAN,
 	PRIMARY KEY (id),
@@ -156,6 +227,26 @@ CREATE TABLE parameter (
 	PRIMARY KEY (id),
 	UNIQUE (name)
 );
+
+INSERT INTO parameter (id, name, type) VALUES
+	(-1, 'width', 'numeric'),
+	(-2, 'height', 'numeric'),
+	(-3, 'depth', 'numeric'),
+	(-4, 'weight', 'numeric');
+
+CREATE TABLE parameter_measure (
+	parameter_id INTEGER NOT NULL,
+	measure_id INTEGER, -- Hint for inserting known parameter with correct unit
+	PRIMARY KEY (parameter_id),
+	FOREIGN KEY (parameter_id) REFERENCES parameter (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (measure_id) REFERENCES measure (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+INSERT INTO parameter_measure (parameter_id, measure_id) VALUES
+	(-1, -1),
+	(-2, -1),
+	(-3, -1),
+	(-4, -2);
 
 CREATE TABLE product_parameter_bool (
 	product_id INTEGER NOT NULL,
