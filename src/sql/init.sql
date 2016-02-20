@@ -71,13 +71,32 @@ CREATE TABLE product_line (
 	UNIQUE (name)
 );
 
+CREATE TABLE measure (
+	id SERIAL,
+	name VARCHAR(64) NOT NULL,
+	PRIMARY KEY (id),
+	UNIQUE (name)
+);
+
 CREATE TABLE unit (
 	id SERIAL,
 	name VARCHAR(64) NOT NULL,
+	symbol VARCHAR(8) NOT NULL,
+	measure_id INTEGER NOT NULL,
 	unit_id INTEGER,
-	ratio DECIMAL(12, 6),
+	ratio DECIMAL,
 	PRIMARY KEY (id),
 	UNIQUE (name),
+	FOREIGN KEY (measure_id) REFERENCES measure (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE measure_main_unit (
+	measure_id INTEGER NOT NULL,
+	unit_id INTEGER,
+	PRIMARY KEY (measure_id),
+	UNIQUE (unit_id),
+	FOREIGN KEY (measure_id) REFERENCES measure (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -107,6 +126,11 @@ CREATE TABLE product (
 	FOREIGN KEY (tax_level_id) REFERENCES tax_level (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE product_variant (
+	product_id INTEGER NOT NULL
+	-- Split product informations to basic data and variants data
 );
 
 CREATE TABLE product_accessory (
@@ -160,11 +184,6 @@ CREATE TABLE product_parameter_textual (
 	PRIMARY KEY (product_id, parameter_id, value),
 	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (parameter_id) REFERENCES parameter (id) ON DELETE RESTRICT ON UPDATE CASCADE
-);
-
-CREATE TABLE product_variant (
-	product_id INTEGER NOT NULL,
-	-- Split product informations to basic data and variants data
 );
 
 REASSIGN OWNED BY archbishop TO reader;
