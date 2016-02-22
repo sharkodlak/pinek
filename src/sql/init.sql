@@ -245,7 +245,7 @@ CREATE FUNCTION check_manufacturer_same() RETURNS trigger
 			IF NEW.product_line_id IS NOT NULL THEN
 				SELECT manufacturer_id INTO product_line_manufacturer_id FROM product_line WHERE id = NEW.product_line_id;
 				IF NEW.manufacturer_id != product_line_manufacturer_id THEN
-					RAISE EXCEPTION 'Manufacturer_id and product_line.manufacturer_id is ambiguous.';
+					RAISE EXCEPTION 'Manufacturer_id and product_line.manufacturer_id is not same.';
 				END IF;
 			END IF;
 			RETURN NEW;
@@ -270,12 +270,13 @@ CREATE TABLE product_variant (
 	minimum_amount DECIMAL NOT NULL DEFAULT 1,
 	availability AVAILABILITY_TYPE NOT NULL DEFAULT 'in stock',
 	availability_date TIMESTAMP with time zone,
-	available_in_days SMALLINT NOT NULL,
+	available_in_days SMALLINT,
 	condition CONDITION_TYPE NOT NULL DEFAULT 'new',
 	active BOOLEAN,
 	PRIMARY KEY (id),
 	UNIQUE (product_id, name_suffix),
 	UNIQUE (uuid),
+	CONSTRAINT check_availability CHECK (availability != 'in stock' OR available_in_days IS NOT NULL),
 	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (main_image_id) REFERENCES image (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
