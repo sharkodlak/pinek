@@ -4,12 +4,22 @@ CREATE DOMAIN tax_rate AS DECIMAL(7,5) CONSTRAINT positive_percentage CHECK (VAL
 CREATE TYPE availability_type AS ENUM ('preorder', 'in stock', 'out of stock');
 CREATE TYPE condition_type AS ENUM ('new', 'refurbished', 'used');
 CREATE TYPE parameter_type AS ENUM ('bool', 'enum', 'numeric', 'textual');
+CREATE TYPE url_scheme_type AS ENUM ('ftp', 'http', 'https');
 
 CREATE TABLE manufacturer (
 	id SERIAL,
 	name VARCHAR(64) NOT NULL,
 	PRIMARY KEY (id),
 	UNIQUE (name)
+);
+
+CREATE TABLE product_line (
+	id SERIAL,
+	manufacturer_id INTEGER NOT NULL,
+	name VARCHAR(64) NOT NULL,
+	PRIMARY KEY (id),
+	UNIQUE (name),
+	FOREIGN KEY (manufacturer_id) REFERENCES manufacturer (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE suplier (
@@ -74,15 +84,6 @@ INSERT INTO availability (id, name, min_days) VALUES
 	(-3, 'usually in stock', 4),
 	(-4, 'to order', 8),
 	(-5, 'on request', 31);
-
-CREATE TABLE product_line (
-	id SERIAL,
-	manufacturer_id INTEGER NOT NULL,
-	name VARCHAR(64) NOT NULL,
-	PRIMARY KEY (id),
-	UNIQUE (name),
-	FOREIGN KEY (manufacturer_id) REFERENCES manufacturer (id) ON DELETE RESTRICT ON UPDATE CASCADE
-);
 
 CREATE TABLE measure (
 	id SERIAL,
@@ -193,7 +194,7 @@ CREATE TABLE image (
 
 CREATE TABLE image_original (
 	image_id INTEGER NOT NULL,
-	url_scheme VARCHAR COLLATE C NOT NULL,
+	url_scheme URL_SCHEME_TYPE NOT NULL,
 	url_authority VARCHAR COLLATE C NOT NULL,
 	url_path VARCHAR COLLATE C NOT NULL,
 	url_query VARCHAR COLLATE C,
@@ -233,11 +234,13 @@ CREATE FUNCTION check_manufacturer_same() RETURNS trigger
 		DECLARE
 			product_line_manufacturer_id INTEGER;
 		BEGIN
-			IF NEW.manufacturer_id IS NULL THEN
-				NEW.manufacturer_id := OLD.manufacturer_id;
-			END IF;
-			IF NEW.product_line_id IS NULL THEN
-				NEW.product_line_id := OLD.product_line_id;
+			IF TG_OP = 'UPDATE' THEN
+				IF NEW.manufacturer_id IS NULL THEN
+					NEW.manufacturer_id := OLD.manufacturer_id;
+				END IF;
+				IF NEW.product_line_id IS NULL THEN
+					NEW.product_line_id := OLD.product_line_id;
+				END IF;
 			END IF;
 			IF NEW.product_line_id IS NOT NULL THEN
 				SELECT manufacturer_id INTO product_line_manufacturer_id FROM product_line WHERE id = NEW.product_line_id;
