@@ -68,11 +68,20 @@ CREATE TABLE availability (
 	UNIQUE (min_days)
 );
 
+INSERT INTO availability (id, name, min_days) VALUES
+	(-1, 'in stock', 0),
+	(-2, 'in stock by supplier', 1),
+	(-3, 'usually in stock', 4),
+	(-4, 'to order', 8),
+	(-5, 'on request', 31);
+
 CREATE TABLE product_line (
 	id SERIAL,
+	manufacturer_id INTEGER NOT NULL,
 	name VARCHAR(64) NOT NULL,
 	PRIMARY KEY (id),
-	UNIQUE (name)
+	UNIQUE (name),
+	FOREIGN KEY (manufacturer_id) REFERENCES manufacturer (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE measure (
@@ -202,6 +211,7 @@ CREATE TABLE product (
 	product_line_id INTEGER,
 	suplier_id INTEGER,
 	tax_level_id INTEGER,
+	unit_prefix VARCHAR(2),
 	unit_id INTEGER, -- Specify unit if product isn't sold per pieces
 	short_description VARCHAR(5000),
 	description TEXT NOT NULL,
@@ -214,8 +224,38 @@ CREATE TABLE product (
 	FOREIGN KEY (product_line_id) REFERENCES product_line (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (suplier_id) REFERENCES suplier (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (tax_level_id) REFERENCES tax_level (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (unit_prefix) REFERENCES unit_prefix (symbol) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
+
+CREATE FUNCTION check_manufacturer_same() RETURNS trigger
+	AS $$
+		DECLARE
+			product_line_manufacturer_id INTEGER;
+		BEGIN
+			IF NEW.manufacturer_id IS NULL THEN
+				NEW.manufacturer_id := OLD.manufacturer_id;
+			END IF;
+			IF NEW.product_line_id IS NULL THEN
+				NEW.product_line_id := OLD.product_line_id;
+			END IF;
+			IF NEW.product_line_id IS NOT NULL THEN
+				SELECT manufacturer_id INTO product_line_manufacturer_id FROM product_line WHERE id = NEW.product_line_id;
+				IF NEW.manufacturer_id != product_line_manufacturer_id THEN
+					RAISE EXCEPTION 'Manufacturer_id and product_line.manufacturer_id is ambiguous.';
+				END IF;
+			END IF;
+			RETURN NEW;
+		END;
+	$$ LANGUAGE plpgsql
+	STABLE;
+
+CREATE TRIGGER check_manufacturer_same_trigger
+	BEFORE INSERT OR UPDATE OF manufacturer_id, product_line_id
+	ON product
+	FOR EACH ROW
+	EXECUTE PROCEDURE check_manufacturer_same();
+
 
 CREATE TABLE product_variant (
 	id SERIAL,
@@ -234,8 +274,7 @@ CREATE TABLE product_variant (
 	UNIQUE (product_id, name_suffix),
 	UNIQUE (uuid),
 	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (main_image_id) REFERENCES image (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE RESTRICT ON UPDATE CASCADE
+	FOREIGN KEY (main_image_id) REFERENCES image (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE multipack (
@@ -303,9 +342,11 @@ CREATE TABLE product_gift (
 CREATE TABLE product_base_unit_amount (
 	product_id INTEGER NOT NULL,
 	amount DECIMAL NOT NULL,
+	unit_prefix VARCHAR(2),
 	unit_id INTEGER NOT NULL,
 	PRIMARY KEY (product_id),
 	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (unit_prefix) REFERENCES unit_prefix (symbol) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -377,10 +418,12 @@ CREATE TABLE product_parameter_numeric (
 	product_id INTEGER NOT NULL,
 	parameter_id INTEGER NOT NULL,
 	value DECIMAL(12, 6) NOT NULL,
+	unit_prefix VARCHAR(2),
 	unit_id INTEGER,
 	PRIMARY KEY (product_id, parameter_id, value),
 	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (parameter_id) REFERENCES parameter (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (unit_prefix) REFERENCES unit_prefix (symbol) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 

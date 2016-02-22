@@ -1,3 +1,11 @@
+INSERT INTO manufacturer (id, name) VALUES
+	(-1, 'Adidas'),
+	(-2, 'Apple');
+
+INSERT INTO suplier (id, name) VALUES
+	(-1, 'Boty.cz'),
+	(-2, 'iTec');
+
 INSERT INTO tax_level (id, name) VALUES
 	(-1, 'základní'),
 	(-2, 'osvobozeno'),
@@ -19,13 +27,5 @@ INSERT INTO tax (tax_level_id, active_from, active_until, percentage) VALUES
 	(-4, '2015-01-01', NULL, 15),
 	(-5, '2015-01-01', NULL, 10);
 
-INSERT INTO manufacturer (id, name) VALUES
-	(-1, 'Adidas'),
-	(-2, 'Apple');
-
-INSERT INTO availability (id, name, min_days) VALUES
-	(-1, 'in stock', 0),
-	(-2, 'in stock by supplier', 1),
-	(-3, 'usually in stock', 4),
-	(-4, 'to order', 8),
-	(-5, 'on request', 31);
+INSERT INTO product_line (id, manufacturer_id, name) VALUES
+	(-1, -2, 'iPod | iPod Touch');
