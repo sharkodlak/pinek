@@ -1,6 +1,9 @@
-CREATE TYPE parameter_type AS ENUM ('bool', 'numeric', 'textual');
+CREATE COLLATION C (locale='C');
 CREATE DOMAIN price AS MONEY CONSTRAINT positive_price CHECK (VALUE >= 0::money);
 CREATE DOMAIN tax_rate AS DECIMAL(7,5) CONSTRAINT positive_percentage CHECK (VALUE >= 0);
+CREATE TYPE availability_type AS ENUM ('preorder', 'in stock', 'out of stock');
+CREATE TYPE condition_type AS ENUM ('new', 'refurbished', 'used');
+CREATE TYPE parameter_type AS ENUM ('bool', 'enum', 'numeric', 'textual');
 
 CREATE TABLE manufacturer (
 	id SERIAL,
@@ -35,33 +38,34 @@ CREATE TABLE tax (
 );
 
 CREATE FUNCTION check_taxes_uniqueness() RETURNS trigger
-AS $$
-	DECLARE
-		duplicates INTEGER;
-	BEGIN
-		IF NEW.active_until IS NULL THEN
-			SELECT COUNT(*) INTO duplicates FROM tax WHERE tax_level_id = NEW.tax_level_id AND active_until IS NULL;
-			IF duplicates > 0 THEN
-				RAISE EXCEPTION 'Another tax violates uniqueness. Set it''s active_until to NOT NULL value before inserting new row with NULL value.';
+	AS $$
+		DECLARE
+			duplicates INTEGER;
+		BEGIN
+			IF NEW.active_until IS NULL THEN
+				SELECT COUNT(*) INTO duplicates FROM tax WHERE tax_level_id = NEW.tax_level_id AND active_until IS NULL;
+				IF duplicates > 0 THEN
+					RAISE EXCEPTION 'Another tax violates uniqueness. Set it''s active_until to NOT NULL value before inserting new row with NULL value.';
+				END IF;
 			END IF;
-		END IF;
-		RETURN NEW;
-	END;
-$$ LANGUAGE plpgsql
-STABLE;
+			RETURN NEW;
+		END;
+	$$ LANGUAGE plpgsql
+	STABLE;
 
 CREATE TRIGGER check_taxes_uniqueness_trigger
-BEFORE INSERT OR UPDATE OF active_until
-ON tax
-FOR EACH ROW
-EXECUTE PROCEDURE check_taxes_uniqueness();
+	BEFORE INSERT OR UPDATE OF active_until
+	ON tax
+	FOR EACH ROW
+	EXECUTE PROCEDURE check_taxes_uniqueness();
 
 CREATE TABLE availability (
 	id SERIAL,
 	name VARCHAR(64) NOT NULL,
-	description VARCHAR(1024),
+	min_days SMALLINT NOT NULL,
 	PRIMARY KEY (id),
-	UNIQUE (name)
+	UNIQUE (name),
+	UNIQUE (min_days)
 );
 
 CREATE TABLE product_line (
@@ -171,37 +175,113 @@ INSERT INTO measure_main_unit (measure_id, unit_id) VALUES
 INSERT INTO measure_main_unit (measure_id, unit_prefix, unit_id) VALUES
 	(-2, 'k', -2);
 
+CREATE TABLE image (
+	id SERIAL,
+	path VARCHAR(1024) COLLATE C NOT NULL, -- Base path, there shall be subdirectories with image variants, liek ${path}/300x200
+	PRIMARY KEY (id),
+	UNIQUE (path)
+);
+
+CREATE TABLE image_original (
+	image_id INTEGER NOT NULL,
+	url_scheme VARCHAR COLLATE C NOT NULL,
+	url_authority VARCHAR COLLATE C NOT NULL,
+	url_path VARCHAR COLLATE C NOT NULL,
+	url_query VARCHAR COLLATE C,
+	etag VARCHAR(64) COLLATE C,
+	UNIQUE (url_scheme, url_authority, url_path, url_query),
+	UNIQUE (etag, url_authority)
+);
+
 CREATE TABLE product (
 	id SERIAL,
-	uuid UUID, -- Usable for XML feeds
+	uuid UUID NOT NULL, -- Usable for XML feeds
+	name VARCHAR(150) NOT NULL,
 	manufacturer_id INTEGER,
 	manufacturer_product_no VARCHAR(64),
 	product_line_id INTEGER,
 	suplier_id INTEGER,
 	tax_level_id INTEGER,
-	name VARCHAR(255) NOT NULL,
-	short_description VARCHAR(1024),
-	description TEXT,
-	price PRICE NOT NULL,
-	quantity DECIMAL,
 	unit_id INTEGER, -- Specify unit if product isn't sold per pieces
-	minimum_amount DECIMAL NOT NULL DEFAULT 1,
-	availability_id INTEGER NOT NULL,
-	active BOOLEAN,
+	short_description VARCHAR(5000),
+	description TEXT NOT NULL,
+	price PRICE NOT NULL,
 	PRIMARY KEY (id),
 	UNIQUE (uuid),
+	UNIQUE (name),
 	UNIQUE (manufacturer_id, manufacturer_product_no),
 	FOREIGN KEY (manufacturer_id) REFERENCES manufacturer (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (product_line_id) REFERENCES product_line (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (suplier_id) REFERENCES suplier (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (tax_level_id) REFERENCES tax_level (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE RESTRICT ON UPDATE CASCADE
+	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE product_variant (
-	product_id INTEGER NOT NULL
-	-- Split product informations to basic data and variants data
+	id SERIAL,
+	uuid UUID, -- Usable for XML feeds
+	product_id INTEGER NOT NULL,
+	name_suffix VARCHAR(32),
+	main_image_id INTEGER,
+	quantity DECIMAL,
+	minimum_amount DECIMAL NOT NULL DEFAULT 1,
+	availability AVAILABILITY_TYPE NOT NULL DEFAULT 'in stock',
+	availability_date TIMESTAMP with time zone,
+	available_in_days SMALLINT NOT NULL,
+	condition CONDITION_TYPE NOT NULL DEFAULT 'new',
+	active BOOLEAN,
+	PRIMARY KEY (id),
+	UNIQUE (product_id, name_suffix),
+	UNIQUE (uuid),
+	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (main_image_id) REFERENCES image (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (availability_id) REFERENCES availability (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE multipack (
+	id SERIAL,
+	uuid UUID, -- Usable for XML feeds
+	product_variant_id INTEGER NOT NULL,
+	main_image_id INTEGER,
+	amount SMALLINT NOT NULL,
+	price PRICE NOT NULL,
+	PRIMARY KEY (id),
+	UNIQUE (uuid),
+	CONSTRAINT amount_multiple CHECK (amount > 1),
+	FOREIGN KEY (product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (main_image_id) REFERENCES image (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE bundle (
+	id SERIAL,
+	uuid UUID, -- Usable for XML feeds
+	main_product_variant_id INTEGER NOT NULL,
+	amount SMALLINT NOT NULL,
+	price PRICE NOT NULL,
+	PRIMARY KEY (id),
+	UNIQUE (uuid),
+	CONSTRAINT amount_positive CHECK (amount > 0),
+	FOREIGN KEY (main_product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE bundle_products (
+	bundle_id INTEGER NOT NULL,
+	product_variant_id INTEGER NOT NULL,
+	amount SMALLINT NOT NULL,
+	PRIMARY KEY (bundle_id, product_variant_id),
+	CONSTRAINT amount_positive CHECK (amount > 0),
+	FOREIGN KEY (bundle_id) REFERENCES bundle (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE product_sale (
+	product_id INTEGER NOT NULL,
+	active_from TIMESTAMP with time zone NOT NULL,
+	active_until TIMESTAMP with time zone,
+	price PRICE NOT NULL,
+	PRIMARY KEY (product_id, active_from),
+	CONSTRAINT from_lower_than_until CHECK (active_until IS NULL OR active_from < active_until),
+	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE product_accessory (
@@ -220,6 +300,15 @@ CREATE TABLE product_gift (
 	FOREIGN KEY (gift_product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
+CREATE TABLE product_base_unit_amount (
+	product_id INTEGER NOT NULL,
+	amount DECIMAL NOT NULL,
+	unit_id INTEGER NOT NULL,
+	PRIMARY KEY (product_id),
+	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
 CREATE TABLE parameter (
 	id SERIAL,
 	name VARCHAR(64) NOT NULL,
@@ -232,7 +321,10 @@ INSERT INTO parameter (id, name, type) VALUES
 	(-1, 'width', 'numeric'),
 	(-2, 'height', 'numeric'),
 	(-3, 'depth', 'numeric'),
-	(-4, 'weight', 'numeric');
+	(-4, 'weight', 'numeric'),
+	(-5, 'color', 'textual'),
+	(-6, 'gender', 'enum'),
+	(-7, 'adult', 'bool');
 
 CREATE TABLE parameter_measure (
 	parameter_id INTEGER NOT NULL,
@@ -248,6 +340,20 @@ INSERT INTO parameter_measure (parameter_id, measure_id) VALUES
 	(-3, -1),
 	(-4, -2);
 
+CREATE TABLE parameter_enum (
+	id SERIAL,
+	parameter_id INTEGER NOT NULL,
+	value VARCHAR(64) NOT NULL,
+	PRIMARY KEY (id),
+	UNIQUE (parameter_id, value),
+	FOREIGN KEY (parameter_id) REFERENCES parameter (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+INSERT INTO parameter_enum (id, parameter_id, value) VALUES
+	(-1, -6, 'male'),
+	(-2, -6, 'female'),
+	(-3, -6, 'unisex');
+
 CREATE TABLE product_parameter_bool (
 	product_id INTEGER NOT NULL,
 	parameter_id INTEGER NOT NULL,
@@ -255,6 +361,16 @@ CREATE TABLE product_parameter_bool (
 	PRIMARY KEY (product_id, parameter_id),
 	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (parameter_id) REFERENCES parameter (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE product_parameter_enum (
+	product_id INTEGER NOT NULL,
+	parameter_id INTEGER NOT NULL,
+	parameter_enum_id INTEGER NOT NULL,
+	PRIMARY KEY (product_id, parameter_id),
+	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (parameter_id) REFERENCES parameter (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (parameter_enum_id) REFERENCES parameter_enum (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE product_parameter_numeric (
