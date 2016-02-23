@@ -69,3 +69,6 @@ INSERT INTO product_sale (product_variant_id, active_from, active_until, price) 
 
 INSERT INTO product_accessory (product_id, accessory_product_id) VALUES
 	(-2, -3);
+
+INSERT INTO product_measure_by_unit_amount (product_id, amount, unit_prefix, unit_id) VALUES
+	(-1, 10, 'da', -2);

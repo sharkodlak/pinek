@@ -357,7 +357,7 @@ CREATE TABLE product_accessory (
 	FOREIGN KEY (accessory_product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
-CREATE TABLE product_base_unit_amount (
+CREATE TABLE product_measure_by_unit_amount (
 	product_id INTEGER NOT NULL,
 	amount DECIMAL NOT NULL,
 	unit_prefix VARCHAR(2),
