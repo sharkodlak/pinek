@@ -107,12 +107,14 @@ INSERT INTO measure (id, name) VALUES
 	(-10, 'frequency'),
 	(-11, 'force'),
 	(-13, 'pressure'),
-	(-15, 'energy');
+	(-15, 'energy'),
+	(-18, 'power');
 INSERT INTO measure (id, name, group_measure_id) VALUES
 	(-12, 'weight', -11),
 	(-14, 'stress', -13),
 	(-16, 'work', -15),
-	(-17, 'heat', -15);
+	(-17, 'heat', -15),
+	(-19, 'radiant flux', -18);
 
 CREATE TABLE unit (
 	id SERIAL,
@@ -127,6 +129,27 @@ CREATE TABLE unit (
 	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
+
+CREATE FUNCTION check_unit_measure_group() RETURNS trigger
+	AS $$
+		DECLARE
+			main_measure_id INTEGER;
+		BEGIN
+			SELECT group_measure_id INTO main_measure_id FROM measure WHERE id = NEW.measure_id;
+			IF main_measure_id IS NOT NULL AND NEW.measure_id != main_measure_id THEN
+				RAISE EXCEPTION 'Unit measure_id must match measure.group_measure_id.';
+			END IF;
+			RETURN NEW;
+		END;
+	$$ LANGUAGE plpgsql
+	STABLE;
+
+CREATE TRIGGER check_unit_measure_group_trigger
+	BEFORE INSERT OR UPDATE OF measure_id
+	ON unit
+	FOR EACH ROW
+	EXECUTE PROCEDURE check_unit_measure_group();
+
 INSERT INTO unit (id, name, symbol, measure_id) VALUES
 	(-1, 'metre', 'm', -1),
 	(-2, 'gram', 'g', -2),
@@ -140,7 +163,8 @@ INSERT INTO unit (id, name, symbol, measure_id) VALUES
 	(-10, 'hertz', 'Hz', -10),
 	(-11, 'newton', 'N', -11),
 	(-12, 'pascal', 'Pa', -13),
-	(-13, 'joule', 'J', -15);
+	(-13, 'joule', 'J', -15),
+	(-14, 'watt', 'W', -18);
 
 CREATE TABLE unit_prefix (
 	symbol VARCHAR(2) NOT NULL,
