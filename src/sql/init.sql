@@ -216,7 +216,6 @@ CREATE TABLE product (
 	unit_id INTEGER, -- Specify unit if product isn't sold per pieces
 	short_description VARCHAR(5000),
 	description TEXT NOT NULL,
-	price PRICE NOT NULL,
 	PRIMARY KEY (id),
 	UNIQUE (uuid),
 	UNIQUE (name),
@@ -272,6 +271,7 @@ CREATE TABLE product_variant (
 	availability_date TIMESTAMP with time zone,
 	available_in_days SMALLINT,
 	condition CONDITION_TYPE NOT NULL DEFAULT 'new',
+	price PRICE NOT NULL,
 	active BOOLEAN,
 	PRIMARY KEY (id),
 	UNIQUE (product_id, name_suffix),
@@ -299,18 +299,20 @@ CREATE TABLE bundle (
 	id SERIAL,
 	uuid UUID, -- Usable for XML feeds
 	main_product_variant_id INTEGER NOT NULL,
-	amount SMALLINT NOT NULL,
+	main_image_id INTEGER,
+	amount SMALLINT NOT NULL DEFAULT 1,
 	price PRICE NOT NULL,
 	PRIMARY KEY (id),
 	UNIQUE (uuid),
 	CONSTRAINT amount_positive CHECK (amount > 0),
-	FOREIGN KEY (main_product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE
+	FOREIGN KEY (main_product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (main_image_id) REFERENCES image (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE bundle_products (
 	bundle_id INTEGER NOT NULL,
 	product_variant_id INTEGER NOT NULL,
-	amount SMALLINT NOT NULL,
+	amount SMALLINT NOT NULL DEFAULT 1,
 	PRIMARY KEY (bundle_id, product_variant_id),
 	CONSTRAINT amount_positive CHECK (amount > 0),
 	FOREIGN KEY (bundle_id) REFERENCES bundle (id) ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -318,13 +320,13 @@ CREATE TABLE bundle_products (
 );
 
 CREATE TABLE product_sale (
-	product_id INTEGER NOT NULL,
+	product_variant_id INTEGER NOT NULL,
 	active_from TIMESTAMP with time zone NOT NULL,
 	active_until TIMESTAMP with time zone,
 	price PRICE NOT NULL,
-	PRIMARY KEY (product_id, active_from),
+	PRIMARY KEY (product_variant_id, active_from),
 	CONSTRAINT from_lower_than_until CHECK (active_until IS NULL OR active_from < active_until),
-	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE
+	FOREIGN KEY (product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE product_accessory (

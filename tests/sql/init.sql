@@ -42,13 +42,25 @@ INSERT INTO image_original (image_id, url_scheme, url_authority, url_path, url_q
 	(-2, 'http', 'www.obchod-s-obuvi.cz', '/pictures/403080.jpg', NULL, '1234567890abcdef'),
 	(-3, 'http', 'www.obchod-s-obuvi.cz', '/pictures/403080.jpg', NULL, '1234567890ABCDEF'); -- Etag is probably case sensitive, it depends on implementation
 
-INSERT INTO product (id, uuid, name, manufacturer_id, manufacturer_product_no, product_line_id, suplier_id, tax_level_id, unit_prefix, unit_id, short_description, description, price) VALUES
-	(-1, '12345678-1234-1234-1234-1234567890ab', 'Adidas Superstar 2 W', -1, 'G43755', NULL, -1, -1, NULL, NULL, 'V rámci kolekce Originals uvádí adidas sportovní obuv The Superstar, která je již od svého vzniku jedničkou mezi obuví.', 'V rámci kolekce Originals uvádí adidas sportovní obuv The Superstar, která je již od svého vzniku jedničkou mezi obuví. Jejím poznávacím znamením je mimo jiné detaily designové zakončení špičky. Díky kvalitnímu materiálu a trendy vzhledu, podtrženého logy Adidas uvnitř boty i na ní, bude hvězdou vašeho botníku.', 1234.56),
-	(-2, '87654321-4321-4321-4321-ba0987654321', 'Apple iPod Touch (5. gen.)', -2, 'oerjn641ern', -1, -2, -4, 'da', -2, 'Supr, čupr.', 'Bomba plomba', 321.99);
+INSERT INTO product (id, uuid, name, manufacturer_id, manufacturer_product_no, product_line_id, suplier_id, tax_level_id, unit_prefix, unit_id, short_description, description) VALUES
+	(-1, '12345678-1234-1234-1234-1234567890ab', 'Adidas Superstar 2 W', -1, 'G43755', NULL, -1, -1, NULL, NULL, 'V rámci kolekce Originals uvádí adidas sportovní obuv The Superstar, která je již od svého vzniku jedničkou mezi obuví.', 'V rámci kolekce Originals uvádí adidas sportovní obuv The Superstar, která je již od svého vzniku jedničkou mezi obuví. Jejím poznávacím znamením je mimo jiné detaily designové zakončení špičky. Díky kvalitnímu materiálu a trendy vzhledu, podtrženého logy Adidas uvnitř boty i na ní, bude hvězdou vašeho botníku.'),
+	(-2, '87654321-4321-4321-4321-ba0987654321', 'Apple iPod Touch (5. gen.)', -2, 'oerjn641ern', -1, -2, -4, 'da', -2, 'Supr, čupr.', 'Bomba plomba');
 
-INSERT INTO product_variant (id, uuid, product_id, name_suffix, main_image_id, quantity, minimum_amount, availability, availability_date, available_in_days, condition, active) VALUES
-	(-1, '12345678-1234-1234-1234-000000000001', -1, 'EUR 36', -1, 3, 1, 'in stock', NULL, 2, 'new', TRUE),
-	(-2, '12345678-1234-1234-1234-000000000002', -1, 'EUR 37', -1, 0, 2, 'preorder', NULL, 2, 'refurbished', FALSE),
-	(-3, '87654321-4321-4321-4321-000000000001', -2, '16GB - Space Gray', -3, 0, 1, 'out of stock', NULL, NULL, 'used', TRUE),
-	(-4, '87654321-4321-4321-4321-000000000002', -2, '32GB Pink', -4, 56, 1, 'in stock', NULL, 5, 'new', TRUE),
-	(-5, '87654321-4321-4321-4321-000000000003', -2, '64GB Blue', -5, 4, 1, 'preorder', '2016-05-11', NULL, 'new', TRUE);
+INSERT INTO product_variant (id, uuid, product_id, name_suffix, main_image_id, quantity, minimum_amount, availability, availability_date, available_in_days, condition, price, active) VALUES
+	(-1, '12345678-1234-1234-1234-000000000001', -1, 'EUR 36', -1, 3, 1, 'in stock', NULL, 2, 'new', 1234.56, TRUE),
+	(-2, '12345678-1234-1234-1234-000000000002', -1, 'EUR 37', -1, 0, 2, 'preorder', NULL, 2, 'refurbished', 1234.56, FALSE),
+	(-3, '87654321-4321-4321-4321-000000000001', -2, '16GB - Space Gray', -3, 0, 1, 'out of stock', NULL, NULL, 'used', 299.99, TRUE),
+	(-4, '87654321-4321-4321-4321-000000000002', -2, '32GB Pink', -4, 56, 1, 'in stock', NULL, 5, 'new', 349, TRUE),
+	(-5, '87654321-4321-4321-4321-000000000003', -2, '64GB Blue', -5, 4, 1, 'preorder', '2016-05-11', NULL, 'new', 399, TRUE);
+
+INSERT INTO multipack (uuid, product_variant_id, main_image_id, amount, price) VALUES
+	('11111111-2222-3333-4444-000000000000', -4, -4, 3, 999);
+
+INSERT INTO bundle (id, uuid, main_product_variant_id, amount, price) VALUES
+	(-1, '11111111-2222-3333-4444-000000000001', -4, 1, 649);
+
+INSERT INTO bundle_products (bundle_id, product_variant_id) VALUES
+	(-1, -1);
+
+INSERT INTO product_sale (product_variant_id, active_from, active_until, price) VALUES
+	(-1, '2016-04-22', '2016-07-22', 987.65);
