@@ -88,8 +88,10 @@ INSERT INTO availability (id, name, min_days) VALUES
 CREATE TABLE measure (
 	id SERIAL,
 	name VARCHAR(64) NOT NULL,
+	group_measure_id INTEGER,
 	PRIMARY KEY (id),
-	UNIQUE (name)
+	UNIQUE (name),
+	FOREIGN KEY (group_measure_id) REFERENCES measure (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 INSERT INTO measure (id, name) VALUES
@@ -99,7 +101,18 @@ INSERT INTO measure (id, name) VALUES
 	(-4, 'electric current'),
 	(-5, 'thermodynamic temperature'),
 	(-6, 'amount of substance'),
-	(-7, 'luminous intensity');
+	(-7, 'luminous intensity'),
+	(-8, 'angle'),
+	(-9, 'solid angle'),
+	(-10, 'frequency'),
+	(-11, 'force'),
+	(-13, 'pressure'),
+	(-15, 'energy');
+INSERT INTO measure (id, name, group_measure_id) VALUES
+	(-12, 'weight', -11),
+	(-14, 'stress', -13),
+	(-16, 'work', -15),
+	(-17, 'heat', -15);
 
 CREATE TABLE unit (
 	id SERIAL,
@@ -121,7 +134,13 @@ INSERT INTO unit (id, name, symbol, measure_id) VALUES
 	(-4, 'ampere', 'A', -4),
 	(-5, 'kelvin', 'K', -5),
 	(-6, 'mole', 'mol', -6),
-	(-7, 'candela', 'cd', -7);
+	(-7, 'candela', 'cd', -7),
+	(-8, 'radian', 'rad', -8),
+	(-9, 'steradian', 'sr', -9),
+	(-10, 'hertz', 'Hz', -10),
+	(-11, 'newton', 'N', -11),
+	(-12, 'pascal', 'Pa', -13),
+	(-13, 'joule', 'J', -15);
 
 CREATE TABLE unit_prefix (
 	symbol VARCHAR(2) NOT NULL,
@@ -272,7 +291,7 @@ CREATE TABLE product_variant (
 	available_in_days SMALLINT,
 	condition CONDITION_TYPE NOT NULL DEFAULT 'new',
 	price PRICE NOT NULL,
-	active BOOLEAN,
+	active BOOLEAN NOT NULL,
 	PRIMARY KEY (id),
 	UNIQUE (product_id, name_suffix),
 	UNIQUE (uuid),
