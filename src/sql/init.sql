@@ -108,13 +108,33 @@ INSERT INTO measure (id, name) VALUES
 	(-11, 'force'),
 	(-13, 'pressure'),
 	(-15, 'energy'),
-	(-18, 'power');
+	(-18, 'power'),
+	(-20, 'electric charge'),
+	(-22, 'voltage'),
+	(-25, 'electric capacitance'),
+	(-26, 'electric resistance'),
+	(-29, 'electrical conductance'),
+	(-30, 'magnetic flux'),
+	(-31, 'magnetic field strength'),
+	(-32, 'inductance'),
+	(-33, 'temperature'),
+	(-34, 'luminous flux'),
+	(-35, 'illuminance'),
+	(-36, 'radioactivity'),
+	(-37, 'absorbed dose'),
+	(-38, 'equivalent dose'),
+	(-39, 'catalytic activity');
 INSERT INTO measure (id, name, group_measure_id) VALUES
 	(-12, 'weight', -11),
 	(-14, 'stress', -13),
 	(-16, 'work', -15),
 	(-17, 'heat', -15),
-	(-19, 'radiant flux', -18);
+	(-19, 'radiant flux', -18),
+	(-21, 'quantity of electricity', -20),
+	(-23, 'electrical potential difference', -22),
+	(-24, 'electromotive force', -22),
+	(-27, 'impedance', -26),
+	(-28, 'reactance', -26);
 
 CREATE TABLE unit (
 	id SERIAL,
@@ -128,7 +148,6 @@ CREATE TABLE unit (
 	FOREIGN KEY (measure_id) REFERENCES measure (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
-
 
 CREATE FUNCTION check_unit_measure_group() RETURNS trigger
 	AS $$
@@ -164,7 +183,22 @@ INSERT INTO unit (id, name, symbol, measure_id) VALUES
 	(-11, 'newton', 'N', -11),
 	(-12, 'pascal', 'Pa', -13),
 	(-13, 'joule', 'J', -15),
-	(-14, 'watt', 'W', -18);
+	(-14, 'watt', 'W', -18),
+	(-15, 'coulomb', 'C', -20),
+	(-16, 'volt', 'V', -22),
+	(-17, 'farad', 'F', -25),
+	(-18, 'ohm', 'Ω', -26),
+	(-19, 'siemens', 'S', -29),
+	(-20, 'weber', 'Wb', -30),
+	(-21, 'tesla', 'T', -31),
+	(-22, 'henry', 'H', -32),
+	(-23, 'degree Celsius', '°C', -33),
+	(-24, 'lumen', 'lm', -34),
+	(-25, 'lux', 'lx', -35),
+	(-26, 'becquerel', 'Bq', -36),
+	(-27, 'gray', 'Gy', -37),
+	(-28, 'sievert', 'Sv', -38),
+	(-29, 'katal', 'kat', -39);
 
 CREATE TABLE unit_prefix (
 	symbol VARCHAR(2) NOT NULL,
