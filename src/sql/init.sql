@@ -123,7 +123,10 @@ INSERT INTO measure (id, name) VALUES
 	(-36, 'radioactivity'),
 	(-37, 'absorbed dose'),
 	(-38, 'equivalent dose'),
-	(-39, 'catalytic activity');
+	(-39, 'catalytic activity'),
+	(-40, 'area'),
+	(-41, 'volume'),
+	(-42, 'level');
 INSERT INTO measure (id, name, group_measure_id) VALUES
 	(-12, 'weight', -11),
 	(-14, 'stress', -13),
@@ -198,7 +201,24 @@ INSERT INTO unit (id, name, symbol, measure_id) VALUES
 	(-26, 'becquerel', 'Bq', -36),
 	(-27, 'gray', 'Gy', -37),
 	(-28, 'sievert', 'Sv', -38),
-	(-29, 'katal', 'kat', -39);
+	(-29, 'katal', 'kat', -39),
+	(-31, 'square metre', 'm²', -40),
+	(-34, 'cubic metre', 'm³', -41),
+	(-43, 'bel', 'B', -42);
+INSERT INTO unit (id, name, symbol, measure_id, ratio, unit_id) VALUES
+	(-30, 'tonne', 't', -2, 1e6, -2),
+	(-32, 'are', 'a', -40, 100, -31),
+	(-33, 'hectare', 'ha', -40, 100, -32),
+	(-35, 'litre', 'l', -41, 0.001, -34),
+	(-36, 'minute', 'min', -3, 60, -3),
+	(-37, 'hour', 'h', -3, 60, -36),
+	(-38, 'day', 'd', -3, 24, -37),
+	(-39, 'second of arc', '″', -8, 0.0000048481368, -8),
+	(-40, 'minute of arc', '′', -8, 60, -39),
+	(-41, 'degree of arc', '°', -8, 60, -40),
+	(-42, 'astronomical unit', 'au', -1, 149597870700, -1),
+	(-44, 'bar', 'bar', -13, 100000, -12),
+	(-45, 'ångström', 'Å', -1, 0.0000000001, -1);
 
 CREATE TABLE unit_prefix (
 	symbol VARCHAR(2) NOT NULL,
@@ -260,7 +280,8 @@ INSERT INTO measure_main_unit (measure_id, unit_id) VALUES
 	(-6, -6),
 	(-7, -7);
 INSERT INTO measure_main_unit (measure_id, unit_prefix, unit_id) VALUES
-	(-2, 'k', -2);
+	(-2, 'k', -2),
+	(-42, 'd', -43);
 
 CREATE TABLE image (
 	id SERIAL,
