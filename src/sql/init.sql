@@ -332,6 +332,7 @@ CREATE TABLE bundle_products (
 	bundle_id INTEGER NOT NULL,
 	product_variant_id INTEGER NOT NULL,
 	amount SMALLINT NOT NULL DEFAULT 1,
+	is_gift BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (bundle_id, product_variant_id),
 	CONSTRAINT amount_positive CHECK (amount > 0),
 	FOREIGN KEY (bundle_id) REFERENCES bundle (id) ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -354,14 +355,6 @@ CREATE TABLE product_accessory (
 	PRIMARY KEY (product_id, accessory_product_id),
 	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (accessory_product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE
-);
-
-CREATE TABLE product_gift (
-	product_id INTEGER NOT NULL,
-	gift_product_id INTEGER NOT NULL,
-	PRIMARY KEY (product_id, gift_product_id),
-	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (gift_product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE product_base_unit_amount (
