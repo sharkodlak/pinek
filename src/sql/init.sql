@@ -363,13 +363,22 @@ CREATE TRIGGER check_manufacturer_same_trigger
 	FOR EACH ROW
 	EXECUTE PROCEDURE check_manufacturer_same();
 
+CREATE TABLE product_measure_by_unit_amount (
+	product_id INTEGER NOT NULL,
+	amount DECIMAL NOT NULL,
+	unit_prefix VARCHAR(2),
+	unit_id INTEGER NOT NULL,
+	PRIMARY KEY (product_id),
+	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (unit_prefix) REFERENCES unit_prefix (symbol) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
 
 CREATE TABLE product_variant (
 	id SERIAL,
 	uuid UUID, -- Usable for XML feeds
 	product_id INTEGER NOT NULL,
 	name_suffix VARCHAR(32),
-	main_image_id INTEGER,
 	quantity DECIMAL,
 	minimum_amount DECIMAL NOT NULL DEFAULT 1,
 	availability AVAILABILITY_TYPE NOT NULL DEFAULT 'in stock',
@@ -382,37 +391,74 @@ CREATE TABLE product_variant (
 	UNIQUE (product_id, name_suffix),
 	UNIQUE (uuid),
 	CONSTRAINT check_availability CHECK (availability != 'in stock' OR available_in_days IS NOT NULL),
-	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (main_image_id) REFERENCES image (id) ON DELETE RESTRICT ON UPDATE CASCADE
+	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
+
+CREATE TABLE product_variant_image (
+	product_variant_id INTEGER NOT NULL,
+	image_id INTEGER NOT NULL,
+	PRIMARY KEY (product_variant_id, image_id),
+	FOREIGN KEY (product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (image_id) REFERENCES image (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE product_variant_main_image (
+	is_main BOOLEAN DEFAULT TRUE,
+	PRIMARY KEY (product_variant_id),
+	CONSTRAINT check_is_main CHECK (is_main)
+) INHERITS (product_variant_image);
 
 CREATE TABLE multipack (
 	id SERIAL,
 	uuid UUID, -- Usable for XML feeds
 	product_variant_id INTEGER NOT NULL,
-	main_image_id INTEGER,
 	amount SMALLINT NOT NULL,
 	price PRICE NOT NULL,
 	PRIMARY KEY (id),
 	UNIQUE (uuid),
 	CONSTRAINT amount_multiple CHECK (amount > 1),
-	FOREIGN KEY (product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (main_image_id) REFERENCES image (id) ON DELETE RESTRICT ON UPDATE CASCADE
+	FOREIGN KEY (product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
+
+CREATE TABLE multipack_image (
+	multipack_id INTEGER NOT NULL,
+	image_id INTEGER NOT NULL,
+	PRIMARY KEY (multipack_id, image_id),
+	FOREIGN KEY (multipack_id) REFERENCES multipack (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (image_id) REFERENCES image (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE multipack_main_image (
+	is_main BOOLEAN DEFAULT TRUE,
+	PRIMARY KEY (multipack_id),
+	CONSTRAINT check_is_main CHECK (is_main)
+) INHERITS (multipack_image);
 
 CREATE TABLE bundle (
 	id SERIAL,
 	uuid UUID, -- Usable for XML feeds
 	main_product_variant_id INTEGER NOT NULL,
-	main_image_id INTEGER,
 	amount SMALLINT NOT NULL DEFAULT 1,
 	price PRICE NOT NULL,
 	PRIMARY KEY (id),
 	UNIQUE (uuid),
 	CONSTRAINT amount_positive CHECK (amount > 0),
-	FOREIGN KEY (main_product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (main_image_id) REFERENCES image (id) ON DELETE RESTRICT ON UPDATE CASCADE
+	FOREIGN KEY (main_product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
+
+CREATE TABLE bundle_image (
+	bundle_id INTEGER NOT NULL,
+	image_id INTEGER NOT NULL,
+	PRIMARY KEY (bundle_id, image_id),
+	FOREIGN KEY (bundle_id) REFERENCES bundle (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (image_id) REFERENCES image (id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE bundle_main_image (
+	is_main BOOLEAN DEFAULT TRUE,
+	PRIMARY KEY (bundle_id),
+	CONSTRAINT check_is_main CHECK (is_main)
+) INHERITS (bundle_image);
 
 CREATE TABLE bundle_products (
 	bundle_id INTEGER NOT NULL,
@@ -441,17 +487,6 @@ CREATE TABLE product_accessory (
 	PRIMARY KEY (product_id, accessory_product_id),
 	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (accessory_product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE
-);
-
-CREATE TABLE product_measure_by_unit_amount (
-	product_id INTEGER NOT NULL,
-	amount DECIMAL NOT NULL,
-	unit_prefix VARCHAR(2),
-	unit_id INTEGER NOT NULL,
-	PRIMARY KEY (product_id),
-	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (unit_prefix) REFERENCES unit_prefix (symbol) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE parameter (

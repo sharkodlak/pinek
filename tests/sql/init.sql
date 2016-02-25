@@ -47,19 +47,39 @@ INSERT INTO product (id, uuid, name, manufacturer_id, manufacturer_product_no, p
 	(-2, '87654321-4321-4321-4321-ba0987654321', 'Apple iPod Touch (5. gen.)', -2, 'oerjn641ern', -1, -2, -4, 'da', -2, 'Supr, čupr.', 'Bomba plomba'),
 	(-3, '88888888-7777-6666-5555-000000000000', 'Apple i-nabíječka', -2, NULL, NULL, NULL, -2, 'm', -1, 'Nabíječka USB 230V', 'Nabíječka do zásuvky 230V -> microUSB.');
 
-INSERT INTO product_variant (id, uuid, product_id, name_suffix, main_image_id, quantity, minimum_amount, availability, availability_date, available_in_days, condition, price, active) VALUES
-	(-1, '12345678-1234-1234-1234-000000000001', -1, 'EUR 36', -1, 3, 1, 'in stock', NULL, 2, 'new', 1234.56, TRUE),
-	(-2, '12345678-1234-1234-1234-000000000002', -1, 'EUR 37', -1, 0, 2, 'preorder', NULL, 2, 'refurbished', 1234.56, FALSE),
-	(-3, '87654321-4321-4321-4321-000000000001', -2, '16GB - Space Gray', -3, 0, 1, 'out of stock', NULL, NULL, 'used', 299.99, TRUE),
-	(-4, '87654321-4321-4321-4321-000000000002', -2, '32GB Pink', -4, 56, 1, 'in stock', NULL, 5, 'new', 349, TRUE),
-	(-5, '87654321-4321-4321-4321-000000000003', -2, '64GB Blue', -5, 4, 1, 'preorder', '2016-05-11', NULL, 'new', 399, TRUE),
-	(-6, '88888888-7777-6666-5555-000000000001', -3, NULL, NULL, 1234, 1, DEFAULT, NULL, 9, DEFAULT, 17, TRUE);
+INSERT INTO product_measure_by_unit_amount (product_id, amount, unit_prefix, unit_id) VALUES
+	(-1, 10, 'da', -2);
 
-INSERT INTO multipack (uuid, product_variant_id, main_image_id, amount, price) VALUES
-	('11111111-2222-3333-4444-000000000000', -4, -4, 3, 999);
+INSERT INTO product_variant (id, uuid, product_id, name_suffix, quantity, minimum_amount, availability, availability_date, available_in_days, condition, price, active) VALUES
+	(-1, '12345678-1234-1234-1234-000000000001', -1, 'EUR 36', 3, 1, 'in stock', NULL, 2, 'new', 1234.56, TRUE),
+	(-2, '12345678-1234-1234-1234-000000000002', -1, 'EUR 37', 0, 2, 'preorder', NULL, 2, 'refurbished', 1234.56, FALSE),
+	(-3, '87654321-4321-4321-4321-000000000001', -2, '16GB - Space Gray', 0, 1, 'out of stock', NULL, NULL, 'used', 299.99, TRUE),
+	(-4, '87654321-4321-4321-4321-000000000002', -2, '32GB Pink', 56, 1, 'in stock', NULL, 5, 'new', 349, TRUE),
+	(-5, '87654321-4321-4321-4321-000000000003', -2, '64GB Blue', 4, 1, 'preorder', '2016-05-11', NULL, 'new', 399, TRUE),
+	(-6, '88888888-7777-6666-5555-000000000001', -3, NULL, 1234, 1, DEFAULT, NULL, 9, DEFAULT, 17, TRUE);
+
+INSERT INTO product_variant_main_image (product_variant_id, image_id) VALUES
+	(-1, -1),
+	(-2, -1),
+	(-3, -3),
+	(-4, -4),
+	(-5, -5);
+
+INSERT INTO product_variant_image (product_variant_id, image_id) VALUES
+	(-1, -2),
+	(-2, -2);
+
+INSERT INTO multipack (id, uuid, product_variant_id, amount, price) VALUES
+	(-1, '11111111-2222-3333-4444-000000000000', -4, 3, 999);
+
+INSERT INTO multipack_main_image (multipack_id, image_id) VALUES
+	(-1, -4);
 
 INSERT INTO bundle (id, uuid, main_product_variant_id, amount, price) VALUES
 	(-1, '11111111-2222-3333-4444-000000000001', -4, 1, 649);
+
+INSERT INTO bundle_main_image (bundle_id, image_id) VALUES
+	(-1, -4);
 
 INSERT INTO bundle_products (bundle_id, product_variant_id) VALUES
 	(-1, -6);
@@ -69,9 +89,6 @@ INSERT INTO product_sale (product_variant_id, active_from, active_until, price) 
 
 INSERT INTO product_accessory (product_id, accessory_product_id) VALUES
 	(-2, -3);
-
-INSERT INTO product_measure_by_unit_amount (product_id, amount, unit_prefix, unit_id) VALUES
-	(-1, 10, 'da', -2);
 
 INSERT INTO product_parameter_bool (product_variant_id, parameter_id, value) VALUES
 	(-1, -7, TRUE),
