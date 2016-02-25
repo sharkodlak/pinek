@@ -72,3 +72,24 @@ INSERT INTO product_accessory (product_id, accessory_product_id) VALUES
 
 INSERT INTO product_measure_by_unit_amount (product_id, amount, unit_prefix, unit_id) VALUES
 	(-1, 10, 'da', -2);
+
+INSERT INTO product_parameter_bool (product_variant_id, parameter_id, value) VALUES
+	(-1, -7, TRUE),
+	(-2, -7, NULL);
+
+INSERT INTO product_parameter_enum (product_variant_id, parameter_id, parameter_enum_id) VALUES
+	(-1, -6, -1),
+	(-3, -6, -3);
+
+INSERT INTO parameter (id, name, type) VALUES
+	(-8, 'storage capacity', 'numeric');
+
+INSERT INTO product_parameter_numeric (product_variant_id, parameter_id, value, unit_prefix, unit_id, unit) VALUES
+	(-3, -1, 10, 'c', -1, NULL),
+	(-3, -2, 20, 'c', -1, NULL),
+	(-3, -3, 1, 'c', -1, NULL),
+	(-3, -4, 1.234, 'k', -2, NULL),
+	(-3, -8, 16, NULL, NULL, 'GB');
+
+INSERT INTO product_parameter_textual (product_variant_id, parameter_id, value) VALUES
+	(-3, -5, 'Space Grey');

@@ -6,6 +6,7 @@ CREATE TYPE condition_type AS ENUM ('new', 'refurbished', 'used');
 CREATE TYPE parameter_type AS ENUM ('bool', 'enum', 'numeric', 'textual');
 CREATE TYPE url_scheme_type AS ENUM ('ftp', 'http', 'https');
 
+
 CREATE TABLE manufacturer (
 	id SERIAL,
 	name VARCHAR(64) NOT NULL,
@@ -91,6 +92,7 @@ CREATE TABLE measure (
 	group_measure_id INTEGER,
 	PRIMARY KEY (id),
 	UNIQUE (name),
+	CONSTRAINT check_group CHECK (group_measure_id IS NULL OR ABS(id) > ABS(group_measure_id)),
 	FOREIGN KEY (group_measure_id) REFERENCES measure (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -126,7 +128,8 @@ INSERT INTO measure (id, name) VALUES
 	(-39, 'catalytic activity'),
 	(-40, 'area'),
 	(-41, 'volume'),
-	(-42, 'level');
+	(-42, 'level'),
+	(-43, 'information');
 INSERT INTO measure (id, name, group_measure_id) VALUES
 	(-12, 'weight', -11),
 	(-14, 'stress', -13),
@@ -143,13 +146,13 @@ CREATE TABLE unit (
 	id SERIAL,
 	name VARCHAR(64) NOT NULL,
 	symbol VARCHAR(8) NOT NULL,
-	measure_id INTEGER NOT NULL,
+	measure_id INTEGER,
+	ratio DECIMAL NOT NULL DEFAULT 1,
 	unit_id INTEGER,
-	ratio DECIMAL,
 	PRIMARY KEY (id),
 	UNIQUE (name),
-	FOREIGN KEY (measure_id) REFERENCES measure (id) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
+	CONSTRAINT check_measure_xor_unit CHECK (measure_id IS NULL != unit_id IS NULL),
+	FOREIGN KEY (measure_id) REFERENCES measure (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE FUNCTION check_unit_measure_group() RETURNS trigger
@@ -157,9 +160,11 @@ CREATE FUNCTION check_unit_measure_group() RETURNS trigger
 		DECLARE
 			main_measure_id INTEGER;
 		BEGIN
-			SELECT group_measure_id INTO main_measure_id FROM measure WHERE id = NEW.measure_id;
-			IF main_measure_id IS NOT NULL AND NEW.measure_id != main_measure_id THEN
-				RAISE EXCEPTION 'Unit measure_id must match measure.group_measure_id.';
+			IF NEW.measure_id IS NOT NULL THEN
+				SELECT group_measure_id INTO main_measure_id FROM measure WHERE id = NEW.measure_id;
+				IF main_measure_id IS NOT NULL AND NEW.measure_id != main_measure_id THEN
+					RAISE EXCEPTION 'Unit measure_id must match measure.group_measure_id.';
+				END IF;
 			END IF;
 			RETURN NEW;
 		END;
@@ -204,21 +209,23 @@ INSERT INTO unit (id, name, symbol, measure_id) VALUES
 	(-29, 'katal', 'kat', -39),
 	(-31, 'square metre', 'm²', -40),
 	(-34, 'cubic metre', 'm³', -41),
-	(-43, 'bel', 'B', -42);
-INSERT INTO unit (id, name, symbol, measure_id, ratio, unit_id) VALUES
-	(-30, 'tonne', 't', -2, 1e6, -2),
-	(-32, 'are', 'a', -40, 100, -31),
-	(-33, 'hectare', 'ha', -40, 100, -32),
-	(-35, 'litre', 'l', -41, 0.001, -34),
-	(-36, 'minute', 'min', -3, 60, -3),
-	(-37, 'hour', 'h', -3, 60, -36),
-	(-38, 'day', 'd', -3, 24, -37),
-	(-39, 'second of arc', '″', -8, 0.0000048481368, -8),
-	(-40, 'minute of arc', '′', -8, 60, -39),
-	(-41, 'degree of arc', '°', -8, 60, -40),
-	(-42, 'astronomical unit', 'au', -1, 149597870700, -1),
-	(-44, 'bar', 'bar', -13, 100000, -12),
-	(-45, 'ångström', 'Å', -1, 0.0000000001, -1);
+	(-43, 'bel', 'B', -42),
+	(-46, 'bit', 'b', -43);
+INSERT INTO unit (id, name, symbol, ratio, unit_id) VALUES
+	(-30, 'tonne', 't', 1e6, -2),
+	(-32, 'are', 'a', 100, -31),
+	(-33, 'hectare', 'ha', 100, -32),
+	(-35, 'litre', 'l', 0.001, -34),
+	(-36, 'minute', 'min', 60, -3),
+	(-37, 'hour', 'h', 60, -36),
+	(-38, 'day', 'd', 24, -37),
+	(-39, 'second of arc', '″', 0.0000048481368, -8),
+	(-40, 'minute of arc', '′', 60, -39),
+	(-41, 'degree of arc', '°', 60, -40),
+	(-42, 'astronomical unit', 'au', 149597870700, -1),
+	(-44, 'bar', 'bar', 100000, -12),
+	(-45, 'ångström', 'Å', 0.0000000001, -1),
+	(-47, 'byte', 'B', 8, -46);
 
 CREATE TABLE unit_prefix (
 	symbol VARCHAR(2) NOT NULL,
@@ -464,7 +471,7 @@ INSERT INTO parameter (id, name, type) VALUES
 	(-6, 'gender', 'enum'),
 	(-7, 'adult', 'bool');
 
-CREATE TABLE parameter_measure (
+CREATE TABLE parameter_measure ( -- Numerical parameters shall have measure
 	parameter_id INTEGER NOT NULL,
 	measure_id INTEGER, -- Hint for inserting known parameter with correct unit
 	PRIMARY KEY (parameter_id),
@@ -493,43 +500,45 @@ INSERT INTO parameter_enum (id, parameter_id, value) VALUES
 	(-3, -6, 'unisex');
 
 CREATE TABLE product_parameter_bool (
-	product_id INTEGER NOT NULL,
+	product_variant_id INTEGER NOT NULL,
 	parameter_id INTEGER NOT NULL,
 	value BOOLEAN, -- NULL represents "maybe" (indecisive answer)
-	PRIMARY KEY (product_id, parameter_id),
-	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	PRIMARY KEY (product_variant_id, parameter_id),
+	FOREIGN KEY (product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (parameter_id) REFERENCES parameter (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE product_parameter_enum (
-	product_id INTEGER NOT NULL,
+	product_variant_id INTEGER NOT NULL,
 	parameter_id INTEGER NOT NULL,
 	parameter_enum_id INTEGER NOT NULL,
-	PRIMARY KEY (product_id, parameter_id),
-	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	PRIMARY KEY (product_variant_id, parameter_id),
+	FOREIGN KEY (product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (parameter_id) REFERENCES parameter (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (parameter_enum_id) REFERENCES parameter_enum (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE product_parameter_numeric (
-	product_id INTEGER NOT NULL,
+	product_variant_id INTEGER NOT NULL,
 	parameter_id INTEGER NOT NULL,
 	value DECIMAL(12, 6) NOT NULL,
 	unit_prefix VARCHAR(2),
 	unit_id INTEGER,
-	PRIMARY KEY (product_id, parameter_id, value),
-	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	unit VARCHAR(16),
+	PRIMARY KEY (product_variant_id, parameter_id, value),
+	CONSTRAINT check_known_units_used CHECK (unit_id IS NULL != unit IS NULL),
+	FOREIGN KEY (product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (parameter_id) REFERENCES parameter (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (unit_prefix) REFERENCES unit_prefix (symbol) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (unit_id) REFERENCES unit (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE product_parameter_textual (
-	product_id INTEGER NOT NULL,
+	product_variant_id INTEGER NOT NULL,
 	parameter_id INTEGER NOT NULL,
 	value VARCHAR NOT NULL,
-	PRIMARY KEY (product_id, parameter_id, value),
-	FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	PRIMARY KEY (product_variant_id, parameter_id, value),
+	FOREIGN KEY (product_variant_id) REFERENCES product_variant (id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (parameter_id) REFERENCES parameter (id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
